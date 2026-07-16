@@ -1,0 +1,29 @@
+# Запуск на VPS (Oracle Cloud и т.п.): сервер рендеринга + Caddy с автоматическим HTTPS.
+# Использование: положите домен в .env (DOMAIN=xxx.duckdns.org) и `docker compose up -d --build`
+services:
+  app:
+    build: ../server
+    restart: unless-stopped
+    environment:
+      CLOUD: "1"
+      RATE_LIMIT: "30"
+      MAX_CONCURRENT: "3"
+    expose:
+      - "4511"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
