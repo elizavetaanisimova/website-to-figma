@@ -1,0 +1,16 @@
+{
+  "name": "site-to-figma-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Локальный сервер рендеринга для плагина Site → Figma",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "playwright": "1.61.1"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Site → Figma (Local)",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "Плагин обращается к локальному серверу рендеринга (http://127.0.0.1:4511), который открывает страницу и отдаёт её слои и картинки."
+  }
+}

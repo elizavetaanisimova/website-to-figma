@@ -1,0 +1,1097 @@
+<meta charset="utf-8">
+<style>
+  :root {
+    --canvas: #FAFAFC;
+    --ink: #16181F;
+    --ink2: #878DA1;
+    --hair: #E9EAF1;
+    --fill: #F1F2F7;
+    --surface: #FFFFFF;
+    --g1: #5B7CFA;
+    --g2: #8B5CF6;
+    --mint: #7CDFD0;
+    --green: #22A06B;
+    --green-soft: #E9F6F0;
+    --red: #E5484D;
+    --red-soft: #FCEEEF;
+    --ring: #C9D6FD;
+    --blob1-o: 0.40;
+    --blob2-o: 0.30;
+    --blob3-o: 0.16;
+  }
+  html.figma-dark {
+    --canvas: #15161C;
+    --ink: #F2F3F8;
+    --ink2: #8F94A8;
+    --hair: #262834;
+    --fill: #20222C;
+    --surface: #2A2D3A;
+    --green: #47C48D;
+    --green-soft: #1C2F26;
+    --red: #F2708A;
+    --red-soft: #372028;
+    --ring: #3A4B7E;
+    --blob1-o: 0.26;
+    --blob2-o: 0.16;
+    --blob3-o: 0.10;
+  }
+  @media (prefers-color-scheme: dark) {
+    html:not(.figma-light):not(.figma-dark) {
+      --canvas: #15161C; --ink: #F2F3F8; --ink2: #8F94A8; --hair: #262834;
+      --fill: #20222C; --surface: #2A2D3A;
+      --green: #47C48D; --green-soft: #1C2F26; --red: #F2708A; --red-soft: #372028;
+      --ring: #3A4B7E; --blob1-o: 0.26; --blob2-o: 0.16; --blob3-o: 0.10;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 11.5px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--canvas);
+    color: var(--ink);
+    padding: 18px 18px 16px;
+    user-select: none;
+    overflow-x: hidden;
+  }
+  body > :not(.blobs) { position: relative; z-index: 1; }
+
+  /* ---------- блобы ---------- */
+  .blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .blobs i { position: absolute; display: block; }
+  .blobs .b1 {
+    width: 250px; height: 220px; top: -80px; right: -70px;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    border-radius: 58% 42% 55% 45% / 48% 55% 45% 52%;
+    filter: blur(46px); opacity: var(--blob1-o);
+    animation: drift1 17s ease-in-out infinite alternate;
+  }
+  .blobs .b2 {
+    width: 180px; height: 170px; top: 150px; left: -110px;
+    background: radial-gradient(circle at 40% 40%, var(--mint), transparent 72%);
+    filter: blur(30px); opacity: var(--blob2-o);
+    animation: drift2 23s ease-in-out infinite alternate;
+  }
+  .blobs .b3 {
+    width: 150px; height: 140px; bottom: -60px; left: 40%;
+    background: linear-gradient(160deg, var(--g2), var(--g1));
+    border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%;
+    filter: blur(48px); opacity: var(--blob3-o);
+    animation: drift1 21s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift1 {
+    0%   { transform: translate(0, 0) scale(1); border-radius: 58% 42% 55% 45% / 48% 55% 45% 52%; }
+    100% { transform: translate(-14px, 16px) scale(1.08); border-radius: 45% 55% 42% 58% / 55% 44% 56% 45%; }
+  }
+  @keyframes drift2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(18px, -14px) scale(1.12); }
+  }
+
+  /* ---------- шапка ---------- */
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .logo {
+    flex: none; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    border-radius: 42% 58% 52% 48% / 46% 42% 58% 54%;
+    animation: logo-morph 9s ease-in-out infinite alternate;
+  }
+  @keyframes logo-morph {
+    0%   { border-radius: 42% 58% 52% 48% / 46% 42% 58% 54%; }
+    50%  { border-radius: 55% 45% 40% 60% / 52% 56% 44% 48%; }
+    100% { border-radius: 46% 54% 58% 42% / 42% 50% 50% 58%; }
+  }
+  .head-titles { flex: 1; min-width: 0; }
+  .head h1 { font-size: 14px; font-weight: 700; letter-spacing: -0.25px; }
+  .tagline { color: var(--ink2); font-size: 10px; margin-top: 0; }
+  .server-pill {
+    flex: none; display: flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 500; color: var(--ink2);
+    cursor: pointer; padding: 4px 2px;
+  }
+  .server-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); transition: background .3s; }
+  .server-pill.on .dot { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+
+  /* ---------- секции ---------- */
+  .card { background: transparent; border: 0; padding: 0; margin-top: 18px; }
+  .field-label {
+    font-size: 9px; font-weight: 650; text-transform: uppercase;
+    letter-spacing: 1.3px; color: var(--ink2); margin-bottom: 8px;
+  }
+
+  /* ---------- URL ---------- */
+  .url-wrap { position: relative; }
+  .url-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink2); }
+  input[type=text], input[type=number], select {
+    width: 100%;
+    padding: 11px 13px;
+    border-radius: 13px;
+    border: 1px solid transparent;
+    background: var(--fill);
+    color: inherit; font: inherit; outline: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .url-wrap input { padding-left: 34px; }
+  input:focus, select:focus { border-color: var(--g1); box-shadow: 0 0 0 3px var(--ring); background: var(--canvas); }
+
+  /* ---------- чипы устройств ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 999px;
+    border: 1px solid var(--hair);
+    background: transparent; color: var(--ink2);
+    cursor: pointer; font-size: 11px; font-weight: 500;
+    transition: all .13s;
+  }
+  .chip svg { flex: none; }
+  .chip:hover { border-color: var(--ink2); color: var(--ink); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--canvas); font-weight: 600; }
+  .chip input {
+    width: 46px; background: transparent; border: 0; padding: 0;
+    color: inherit; font-size: 11px; box-shadow: none; border-radius: 0;
+  }
+  .chip input:focus { box-shadow: none; border-color: transparent; background: transparent; }
+  .chip input::placeholder { color: inherit; opacity: .45; }
+
+  /* ---------- сегменты темы ---------- */
+  .seg { display: flex; background: var(--fill); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button {
+    flex: 1; padding: 7px 4px; border: 0; background: transparent;
+    color: var(--ink2); font: inherit; font-size: 11px; font-weight: 500;
+    border-radius: 999px; cursor: pointer; transition: all .13s;
+  }
+  .seg button.on {
+    background: var(--surface); color: var(--ink); font-weight: 650;
+    box-shadow: 0 1px 4px rgba(15, 18, 34, 0.10);
+  }
+
+  /* ---------- опции ---------- */
+  .opt {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; cursor: pointer;
+  }
+  .opt .t { font-size: 11.5px; font-weight: 550; }
+  .opt .d { font-size: 10px; color: var(--ink2); margin-top: 1px; }
+  .opt.disabled { opacity: .4; pointer-events: none; }
+  .toggle {
+    position: relative; width: 34px; height: 20px; flex: none; margin-left: 12px;
+    background: var(--hair); border-radius: 999px;
+    transition: background .15s;
+  }
+  .toggle::after {
+    content: ''; position: absolute; top: 2.5px; left: 3px;
+    width: 15px; height: 15px; border-radius: 50%;
+    background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    transition: left .15s;
+  }
+  html.figma-dark .toggle::after { background: var(--ink2); }
+  .opt.on .toggle { background: var(--ink); }
+  .opt.on .toggle::after { left: 16px; background: var(--canvas); }
+
+  /* ---------- кнопки ---------- */
+  .btn {
+    width: 100%; margin-top: 20px; padding: 13px;
+    border: 0; border-radius: 999px;
+    background: linear-gradient(120deg, var(--g1), var(--g2));
+    color: #fff;
+    font: inherit; font-size: 12.5px; font-weight: 650; letter-spacing: 0.1px;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(102, 96, 246, 0.24);
+    transition: filter .15s, transform .06s, box-shadow .15s;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: default; box-shadow: none; }
+  .btn.secondary {
+    background: var(--ink); color: var(--canvas); box-shadow: none;
+  }
+  .btn.ghost-danger {
+    background: transparent; color: var(--red);
+    border: 1px solid var(--hair); box-shadow: none;
+    padding: 9px;
+  }
+  .btn.ghost-danger:hover { border-color: var(--red); filter: none; }
+  .btn-row { display: flex; gap: 8px; align-items: stretch; }
+  .btn-row .btn { margin-top: 20px; }
+  :focus-visible { outline: 2px solid var(--g1); outline-offset: 2px; }
+
+  /* ---------- прогресс ---------- */
+  #progress { display: none; margin-top: 16px; }
+  #stage { font-size: 11px; color: var(--ink2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .spinner {
+    width: 12px; height: 12px; flex: none;
+    border: 2px solid var(--hair); border-top-color: var(--g1);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #bar { height: 5px; background: var(--fill); border-radius: 999px; overflow: hidden; }
+  #fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--g1), var(--g2));
+    border-radius: 999px; transition: width .25s;
+  }
+
+  /* ---------- результат / ошибки ---------- */
+  #done-card { display: none; background: var(--green-soft); border-radius: 14px; padding: 12px 14px; }
+  #done-card .title { color: var(--green); font-weight: 650; margin-bottom: 3px; font-size: 11.5px; }
+  #done-card .muted { color: var(--ink2); }
+  #err-card {
+    display: none; background: var(--red-soft); border-radius: 14px; padding: 12px 14px;
+    color: var(--red); white-space: pre-wrap; user-select: text; font-size: 11px;
+  }
+  #session-hint {
+    display: none; background: var(--fill); border-radius: 14px; padding: 11px 13px;
+    color: var(--ink2); font-size: 10.5px;
+  }
+
+  /* ---------- дополнительно ---------- */
+  summary {
+    cursor: pointer; color: var(--ink2); font-size: 10.5px; font-weight: 550;
+    list-style: none; display: flex; align-items: center; gap: 6px;
+  }
+  summary::before {
+    content: ''; width: 5px; height: 5px; flex: none;
+    border-right: 1.5px solid var(--ink2); border-bottom: 1.5px solid var(--ink2);
+    transform: rotate(-45deg); transition: transform .15s; margin-top: -1px;
+  }
+  details[open] summary::before { transform: rotate(45deg); }
+  details .inner { padding-top: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 .wide { grid-column: 1 / -1; }
+
+  /* ---------- история ---------- */
+  #history { display: none; }
+  .hist-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 7px 10px; margin: 0 -10px; border-radius: 10px; cursor: pointer;
+  }
+  .hist-row:hover { background: var(--fill); }
+  .hist-row .u { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-row .m { font-size: 9.5px; color: var(--ink2); flex: none; }
+
+  /* ---------- донаты ---------- */
+  #donate {
+    margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--hair);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 10px; color: var(--ink2);
+  }
+  .don-btn {
+    cursor: pointer; padding: 5px 12px; border-radius: 999px; flex: none;
+    border: 1px solid var(--hair); background: transparent; color: var(--ink2);
+    font: inherit; font-size: 10px; font-weight: 550; transition: all .13s;
+  }
+  .don-btn:hover { color: var(--ink); border-color: var(--ink2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blobs i, .logo { animation: none; }
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+<div class="blobs" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+
+<div class="head">
+  <div class="logo" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 128 128" fill="none">
+      <path d="M24 24 L57 57" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+      <path d="M58 30 L58 58 L30 58" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="58" y="58" width="46" height="46" rx="14" stroke="#fff" stroke-width="11"/>
+    </svg>
+  </div>
+  <div class="head-titles">
+    <h1>Site to Figma</h1>
+    <div class="tagline" data-i18n="tagline"></div>
+  </div>
+  <div class="server-pill" id="server-pill">
+    <div class="dot"></div><span id="server-label"></span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="field-label" data-i18n="urlLabel"></div>
+  <div class="url-wrap">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
+    </svg>
+    <input type="text" id="url" placeholder="https://example.com" spellcheck="false">
+  </div>
+</div>
+
+<div class="card">
+  <div class="field-label" data-i18n="devices"></div>
+  <div class="chips" id="devices">
+    <div class="chip" data-w="1440">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+      <span data-i18n="desktop"></span>
+    </div>
+    <div class="chip" data-w="1280">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="10" rx="1.5"/><path d="M2 18h20"/></svg>
+      <span data-i18n="laptop"></span>
+    </div>
+    <div class="chip" data-w="768">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M11 17.5h2"/></svg>
+      <span data-i18n="tablet"></span>
+    </div>
+    <div class="chip" data-w="390">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
+      <span data-i18n="phone"></span>
+    </div>
+    <div class="chip" id="custom-chip">
+      <span data-i18n="custom"></span>
+      <input type="number" id="custom-w" placeholder="1920" min="320" max="3000">
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="field-label" data-i18n="theme"></div>
+  <div class="seg" id="theme">
+    <button data-v="light" class="on" data-i18n="light"></button>
+    <button data-v="dark" data-i18n="dark"></button>
+    <button data-v="both" data-i18n="both"></button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="field-label" data-i18n="options"></div>
+  <div class="opt on" id="opt-autolayout">
+    <div><div class="t" data-i18n="alTitle"></div><div class="d" data-i18n="alDesc"></div></div>
+    <div class="toggle"></div>
+  </div>
+  <div class="opt" id="opt-screenshot">
+    <div><div class="t" data-i18n="shotTitle"></div><div class="d" data-i18n="shotDesc"></div></div>
+    <div class="toggle"></div>
+  </div>
+  <div class="opt" id="opt-styles">
+    <div><div class="t" data-i18n="stylesTitle"></div><div class="d" data-i18n="stylesDesc"></div></div>
+    <div class="toggle"></div>
+  </div>
+  <div class="opt" id="opt-login">
+    <div><div class="t" data-i18n="loginTitle"></div><div class="d" id="login-desc"></div></div>
+    <div class="toggle"></div>
+  </div>
+</div>
+
+<details class="card">
+  <summary data-i18n="advanced"></summary>
+  <div class="inner grid2">
+    <div>
+      <div class="field-label" data-i18n="maxh"></div>
+      <select id="maxh">
+        <option value="10000">10 000 px</option>
+        <option value="20000" selected>20 000 px</option>
+        <option value="40000">40 000 px</option>
+      </select>
+    </div>
+    <div>
+      <div class="field-label" data-i18n="language"></div>
+      <select id="lang">
+        <option value="auto" selected>Auto</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+    <div class="wide">
+      <div class="field-label" data-i18n="serverLabel"></div>
+      <input type="text" id="server" spellcheck="false">
+    </div>
+  </div>
+</details>
+
+<button class="btn" id="go"></button>
+<div class="btn-row" id="session-btns" style="display:none">
+  <button class="btn secondary" id="session-capture"></button>
+  <button class="btn ghost-danger" id="session-close" style="width:auto;" title="Close browser">&times;</button>
+</div>
+<div class="card" id="session-hint"></div>
+<button class="btn ghost-danger" id="cancel" style="display:none"></button>
+
+<div class="card" id="progress">
+  <div id="stage"><div class="spinner"></div><span id="stage-text"></span></div>
+  <div id="bar"><div id="fill"></div></div>
+</div>
+
+<div class="card" id="done-card"></div>
+<div class="card" id="err-card"></div>
+
+<div class="card" id="history">
+  <div class="field-label" data-i18n="history"></div>
+  <div id="history-list"></div>
+</div>
+
+<div id="donate">
+  <span data-i18n="donate"></span>
+  <button class="don-btn" id="don-ton" title="USDT · TON network only. UQBz8oG02Va5OnCUw5mZ7sIUhxcqqWrTwIDlMqqt8Ca0jWbL"></button>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // После деплоя сервера в облако замените на его адрес, например:
+  // const DEFAULT_SERVER = 'https://site-to-figma.fly.dev';
+  const DEFAULT_SERVER = 'http://127.0.0.1:4511';
+  const TON_ADDRESS = 'UQBz8oG02Va5OnCUw5mZ7sIUhxcqqWrTwIDlMqqt8Ca0jWbL';
+
+  // ---------- локализация ----------
+  const STR = {
+    en: {
+      tagline: 'Any website into editable layers',
+      serverOn: 'Server online', serverCloud: 'Cloud server', serverOff: 'Server offline',
+      urlLabel: 'Website link',
+      devices: 'Devices',
+      desktop: 'Desktop', laptop: 'Laptop', tablet: 'Tablet', phone: 'Phone', custom: 'Custom',
+      theme: 'Website theme', light: 'Light', dark: 'Dark', both: 'Both',
+      options: 'Options',
+      alTitle: 'Auto Layout', alDesc: 'Flex containers become auto layout frames',
+      shotTitle: 'Reference screenshot', shotDesc: 'A real screenshot is placed next to the import',
+      stylesTitle: 'Color & text styles', stylesDesc: 'Create Figma styles from the site palette',
+      loginTitle: 'Site behind a login or captcha',
+      loginDesc: 'A browser window opens — sign in, then import',
+      loginDescCloud: 'Available only with a local server',
+      advanced: 'Advanced', maxh: 'Max height', language: 'Language', serverLabel: 'Server URL',
+      importBtn: 'Import', loginOpenBtn: '1. Open browser to sign in',
+      captureBtn: 'Import the open page',
+      cancelBtn: 'Cancel import', canceling: 'Canceling…',
+      openingBrowser: 'Opening browser window…',
+      stageOpen: (w, th) => 'Opening page (' + w + 'px' + (th ? ', ' + th : '') + ')… may take up to a minute',
+      stageImages: (n) => 'Processing images (' + n + ')…',
+      stageBuild: 'Building layers in Figma…',
+      statusUpload: 'Uploading images to Figma…',
+      statusStyles: 'Creating color & text styles…',
+      doneTitle: 'Import finished',
+      lines_layers: (n, v) => 'Layers: ' + n + (v > 1 ? ' (' + v + ' variants)' : ''),
+      lines_al: (n) => 'Auto Layout: ' + n + ' frames',
+      lines_styles: (n) => 'Styles created: ' + n,
+      lines_imgSkipped: (n) => 'Images skipped: ' + n,
+      lines_svgFailed: (n) => 'SVG not imported: ' + n,
+      errNoUrl: 'Enter a website link.',
+      errNoDevice: 'Select at least one device.',
+      errCancelled: 'Import canceled.',
+      serverHelp: 'The server is not responding.\n\nStart it in Terminal:\ncd figma-site-importer/server\nnpm install   (first time only)\nnpm start',
+      sessionHint: (w) => 'Browser window is open (' + w + 'px). Sign in, open the page you need, then click "Import the open page".',
+      history: 'Recent imports',
+      donate: 'Free plugin. Enjoying it? Support the project',
+      donBtn: 'USDT (TON) · copy address',
+      donCopied: 'Copied — USDT on TON only!',
+      themes2: '2 themes', signedIn: 'signed in',
+      screenshotName: 'Screenshot',
+      truncated: 'truncated',
+    },
+    ru: {
+      tagline: 'Любой сайт — в редактируемые слои',
+      serverOn: 'Сервер работает', serverCloud: 'Облачный сервер', serverOff: 'Сервер недоступен',
+      urlLabel: 'Ссылка на сайт',
+      devices: 'Устройства',
+      desktop: 'Десктоп', laptop: 'Ноутбук', tablet: 'Планшет', phone: 'Телефон', custom: 'Своя',
+      theme: 'Тема сайта', light: 'Светлая', dark: 'Тёмная', both: 'Обе',
+      options: 'Опции',
+      alTitle: 'Auto Layout', alDesc: 'Flex-контейнеры станут авто-лейаутами',
+      shotTitle: 'Скриншот-эталон', shotDesc: 'Рядом появится реальный скриншот для сверки',
+      stylesTitle: 'Стили цветов и текста', stylesDesc: 'Создать Figma-стили из палитры сайта',
+      loginTitle: 'Сайт за логином или капчей',
+      loginDesc: 'Откроется браузер — войдите, потом импортируйте',
+      loginDescCloud: 'Доступно только с локальным сервером',
+      advanced: 'Дополнительно', maxh: 'Макс. высота', language: 'Язык', serverLabel: 'Адрес сервера',
+      importBtn: 'Импортировать', loginOpenBtn: '1. Открыть браузер для входа',
+      captureBtn: 'Импортировать открытую страницу',
+      cancelBtn: 'Отменить импорт', canceling: 'Отменяю…',
+      openingBrowser: 'Открываю окно браузера…',
+      stageOpen: (w, th) => 'Открываю страницу (' + w + 'px' + (th ? ', ' + th : '') + ')… до минуты',
+      stageImages: (n) => 'Обрабатываю картинки (' + n + ')…',
+      stageBuild: 'Строю слои в Figma…',
+      statusUpload: 'Загружаю картинки в Figma…',
+      statusStyles: 'Создаю стили цветов и текста…',
+      doneTitle: 'Импорт завершён',
+      lines_layers: (n, v) => 'Слоёв: ' + n + (v > 1 ? ' (' + v + ' варианта)' : ''),
+      lines_al: (n) => 'Auto Layout: ' + n + ' фреймов',
+      lines_styles: (n) => 'Стилей создано: ' + n,
+      lines_imgSkipped: (n) => 'Картинок пропущено: ' + n,
+      lines_svgFailed: (n) => 'SVG не импортировалось: ' + n,
+      errNoUrl: 'Укажите ссылку на сайт.',
+      errNoDevice: 'Выберите хотя бы одно устройство.',
+      errCancelled: 'Импорт отменён.',
+      serverHelp: 'Сервер не отвечает.\n\nЗапустите его в Терминале:\ncd figma-site-importer/server\nnpm install   (только первый раз)\nnpm start',
+      sessionHint: (w) => 'Окно браузера открыто (' + w + 'px). Войдите на сайт, откройте нужную страницу и нажмите «Импортировать открытую страницу».',
+      history: 'Недавние импорты',
+      donate: 'Плагин бесплатный. Нравится — поддержите проект',
+      donBtn: 'USDT (TON) · копировать адрес',
+      donCopied: 'Скопировано — только USDT в TON!',
+      themes2: '2 темы', signedIn: 'вход выполнен',
+      screenshotName: 'Скриншот',
+      truncated: 'обрезано',
+    },
+  };
+
+  // ---------- состояние ----------
+  const state = {
+    busy: false,
+    cancelled: false,
+    widths: [1440],
+    theme: 'light',
+    autoLayout: true,
+    screenshot: false,
+    styles: false,
+    login: false,
+    session: null, // { id, width }
+    history: [],
+    fetchCtrl: null,
+    pendingBuild: null,
+    caps: null,
+    langSetting: 'auto', // auto | en | ru
+  };
+
+  function detectLang() {
+    if (state.langSetting === 'en' || state.langSetting === 'ru') return state.langSetting;
+    return String(navigator.language || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en';
+  }
+  let L = STR[detectLang()];
+  const t = (key, a, b) => (typeof L[key] === 'function' ? L[key](a, b) : L[key]);
+
+  function applyLang() {
+    L = STR[detectLang()];
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const v = L[el.dataset.i18n];
+      if (typeof v === 'string') el.textContent = v;
+    });
+    $('don-ton').textContent = t('donBtn');
+    $('cancel').textContent = t('cancelBtn');
+    $('session-capture').textContent = t('captureBtn');
+    updateLoginUI();
+    applyCaps();
+    renderHistory();
+  }
+
+  // ---------- элементы управления ----------
+  function renderChips() {
+    document.querySelectorAll('#devices .chip[data-w]').forEach((ch) => {
+      ch.classList.toggle('on', state.widths.includes(Number(ch.dataset.w)));
+    });
+  }
+  document.querySelectorAll('#devices .chip[data-w]').forEach((ch) => {
+    ch.onclick = () => {
+      const w = Number(ch.dataset.w);
+      if (state.widths.includes(w)) {
+        if (state.widths.length > 1 || $('custom-w').value) state.widths = state.widths.filter((x) => x !== w);
+      } else state.widths.push(w);
+      renderChips();
+      saveSettings();
+    };
+  });
+  $('custom-chip').onclick = (e) => { if (e.target.tagName !== 'INPUT') $('custom-w').focus(); };
+  $('custom-w').oninput = () => {
+    $('custom-chip').classList.toggle('on', !!$('custom-w').value);
+    saveSettings();
+  };
+
+  document.querySelectorAll('#theme button').forEach((b) => {
+    b.onclick = () => {
+      document.querySelectorAll('#theme button').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+      state.theme = b.dataset.v;
+      saveSettings();
+    };
+  });
+
+  function bindToggle(id, key, onChange) {
+    $(id).onclick = () => {
+      $(id).classList.toggle('on');
+      state[key] = $(id).classList.contains('on');
+      saveSettings();
+      if (onChange) onChange();
+    };
+  }
+  bindToggle('opt-autolayout', 'autoLayout');
+  bindToggle('opt-screenshot', 'screenshot');
+  bindToggle('opt-styles', 'styles');
+  bindToggle('opt-login', 'login', updateLoginUI);
+
+  function updateLoginUI() {
+    if (state.login && !state.session) {
+      $('go').textContent = t('loginOpenBtn');
+    } else if (!state.login) {
+      $('go').textContent = t('importBtn');
+      if (state.session) closeSession();
+    } else {
+      $('go').textContent = t('importBtn');
+    }
+    $('session-btns').style.display = state.session ? 'flex' : 'none';
+    $('go').style.display = state.session ? 'none' : 'block';
+    $('session-hint').style.display = state.session ? 'block' : 'none';
+  }
+
+  // ---------- настройки и история ----------
+  function collectSettings() {
+    return {
+      widths: state.widths,
+      customW: $('custom-w').value,
+      theme: state.theme,
+      autoLayout: state.autoLayout,
+      screenshot: state.screenshot,
+      styles: state.styles,
+      maxHeight: Number($('maxh').value),
+      server: $('server').value,
+      lastUrl: $('url').value,
+      lang: state.langSetting,
+    };
+  }
+  let saveTimer = null;
+  function saveSettings() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      parent.postMessage({ pluginMessage: { type: 'save-settings', settings: collectSettings() } }, '*');
+    }, 300);
+  }
+  $('url').oninput = saveSettings;
+  $('server').oninput = saveSettings;
+  $('maxh').onchange = saveSettings;
+  $('lang').onchange = () => {
+    state.langSetting = $('lang').value;
+    saveSettings();
+    applyLang();
+  };
+
+  function applySettings(s) {
+    if (!s) return;
+    if (Array.isArray(s.widths) && s.widths.length) state.widths = s.widths;
+    if (s.customW) { $('custom-w').value = s.customW; $('custom-chip').classList.add('on'); }
+    if (s.theme) {
+      state.theme = s.theme;
+      document.querySelectorAll('#theme button').forEach((b) => b.classList.toggle('on', b.dataset.v === s.theme));
+    }
+    ['autoLayout', 'screenshot', 'styles'].forEach((k) => {
+      if (typeof s[k] === 'boolean') {
+        state[k] = s[k];
+        const el = $('opt-' + (k === 'autoLayout' ? 'autolayout' : k));
+        if (el) el.classList.toggle('on', s[k]);
+      }
+    });
+    if (s.maxHeight) $('maxh').value = String(s.maxHeight);
+    if (s.server) $('server').value = s.server;
+    if (s.lastUrl) $('url').value = s.lastUrl;
+    if (s.lang) { state.langSetting = s.lang; $('lang').value = s.lang; }
+    renderChips();
+  }
+
+  function renderHistory() {
+    const list = $('history-list');
+    list.innerHTML = '';
+    $('history').style.display = state.history.length ? 'block' : 'none';
+    for (const h of state.history.slice(0, 6)) {
+      const row = document.createElement('div');
+      row.className = 'hist-row';
+      const u = document.createElement('div');
+      u.className = 'u';
+      u.textContent = h.url;
+      const m = document.createElement('div');
+      m.className = 'm';
+      m.textContent = h.meta || '';
+      row.appendChild(u);
+      row.appendChild(m);
+      row.onclick = () => { $('url').value = h.url; saveSettings(); };
+      list.appendChild(row);
+    }
+  }
+
+  function pushHistory(url, meta) {
+    state.history = [{ url, meta, ts: Date.now() }, ...state.history.filter((h) => h.url !== url)].slice(0, 8);
+    renderHistory();
+    parent.postMessage({ pluginMessage: { type: 'save-history', history: state.history } }, '*');
+  }
+
+  // ---------- сервер ----------
+  function serverUrl() {
+    return $('server').value.trim().replace(/\/+$/, '');
+  }
+
+  function applyCaps() {
+    const sessionsOk = !state.caps || state.caps.sessions !== false;
+    const opt = $('opt-login');
+    opt.classList.toggle('disabled', !sessionsOk);
+    $('login-desc').textContent = sessionsOk ? t('loginDesc') : t('loginDescCloud');
+    if (!sessionsOk && state.login) {
+      state.login = false;
+      opt.classList.remove('on');
+      updateLoginUI();
+    }
+  }
+
+  async function ping() {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 2500);
+      const r = await fetch(serverUrl() + '/health', { signal: ctrl.signal });
+      clearTimeout(timer);
+      let j = null;
+      try { j = await r.json(); } catch (e) {}
+      const ok = !!(r.ok && j && j.ok);
+      state.caps = j ? (j.capabilities || { sessions: !j.cloud }) : null;
+      $('server-pill').classList.toggle('on', ok);
+      $('server-label').textContent = ok ? (j.cloud ? t('serverCloud') : t('serverOn')) : t('serverOff');
+      applyCaps();
+      return ok;
+    } catch (e) {
+      $('server-pill').classList.remove('on');
+      $('server-label').textContent = t('serverOff');
+      return false;
+    }
+  }
+
+  // ---------- обработка картинок ----------
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  }
+
+  function rasterizeSvg(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth || 1024;
+        const h = img.naturalHeight || 1024;
+        const scale = Math.min(2048 / w, 2048 / h, 2);
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(w * scale));
+        c.height = Math.max(1, Math.round(h * scale));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('svg decode failed')); };
+      img.src = url;
+    });
+  }
+
+  const SAFE_MIME = /^image\/(png|jpe?g|gif)$/;
+  const MAXD = 4000; // лимит Figma — 4096
+
+  async function normalizeOne(img) {
+    let mime = (img.mime || '').toLowerCase();
+    const url = img.url || '';
+    if (!mime || /octet-stream|text\/plain/.test(mime)) {
+      if (/\.svg(\?|#|$)/i.test(url)) mime = 'image/svg+xml';
+      else if (/\.png(\?|#|$)/i.test(url)) mime = 'image/png';
+      else if (/\.jpe?g(\?|#|$)/i.test(url)) mime = 'image/jpeg';
+      else if (/\.gif(\?|#|$)/i.test(url)) mime = 'image/gif';
+      else if (/\.webp(\?|#|$)/i.test(url)) mime = 'image/webp';
+    }
+    const bytes = b64ToBytes(img.b64);
+    const blob = new Blob([bytes], { type: mime || 'image/png' });
+
+    let source = null, w = 0, h = 0;
+    if (mime === 'image/svg+xml') {
+      const c = await rasterizeSvg(blob);
+      source = c; w = c.width; h = c.height;
+    } else {
+      try {
+        const bmp = await createImageBitmap(blob);
+        source = bmp; w = bmp.width; h = bmp.height;
+      } catch (e) {
+        try {
+          const c = await rasterizeSvg(new Blob([bytes], { type: 'image/svg+xml' }));
+          source = c; w = c.width; h = c.height;
+        } catch (e2) {
+          if (SAFE_MIME.test(mime)) return { b64: img.b64, mime };
+          return null;
+        }
+      }
+    }
+
+    if (SAFE_MIME.test(mime) && w <= MAXD && h <= MAXD) {
+      if (source.close) source.close();
+      return { b64: img.b64, mime };
+    }
+    const scale = Math.min(1, MAXD / w, MAXD / h);
+    const cw = Math.max(1, Math.round(w * scale));
+    const ch = Math.max(1, Math.round(h * scale));
+    const c = document.createElement('canvas');
+    c.width = cw; c.height = ch;
+    c.getContext('2d').drawImage(source, 0, 0, cw, ch);
+    if (source.close) source.close();
+    const outMime = mime === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+    const dataUrl = c.toDataURL(outMime, 0.9);
+    return { b64: dataUrl.slice(dataUrl.indexOf(',') + 1), mime: outMime };
+  }
+
+  async function normalizeImages(imageData, onProgress) {
+    const ids = Object.keys(imageData || {});
+    const out = {};
+    let done = 0;
+    const queue = [...ids];
+    const worker = async () => {
+      while (queue.length) {
+        if (state.cancelled) return;
+        const id = queue.shift();
+        try {
+          const norm = await normalizeOne(imageData[id]);
+          if (norm) out[id] = norm;
+        } catch (e) { /* пропускаем */ }
+        done++;
+        if (onProgress && (done % 5 === 0 || done === ids.length)) onProgress(done, ids.length);
+      }
+    };
+    await Promise.all(Array.from({ length: 4 }, worker));
+    return out;
+  }
+
+  // ---------- прогресс и статусы ----------
+  function setStage(text) {
+    $('progress').style.display = 'block';
+    $('stage-text').textContent = text;
+  }
+  function setBar(p) {
+    $('fill').style.width = Math.round(Math.max(0, Math.min(1, p)) * 100) + '%';
+  }
+  function hideCards() {
+    $('done-card').style.display = 'none';
+    $('err-card').style.display = 'none';
+  }
+  function showError(text) {
+    $('err-card').textContent = text;
+    $('err-card').style.display = 'block';
+    $('progress').style.display = 'none';
+  }
+  function showDone(lines) {
+    const card = $('done-card');
+    card.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = t('doneTitle');
+    card.appendChild(title);
+    for (const line of lines) {
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.textContent = line;
+      card.appendChild(d);
+    }
+    card.style.display = 'block';
+    $('progress').style.display = 'none';
+  }
+
+  function setBusy(b) {
+    state.busy = b;
+    $('go').disabled = b;
+    $('session-capture').disabled = b;
+    $('cancel').style.display = b ? 'block' : 'none';
+    if (!b) { state.cancelled = false; state.fetchCtrl = null; }
+  }
+
+  $('cancel').onclick = () => {
+    state.cancelled = true;
+    if (state.fetchCtrl) state.fetchCtrl.abort();
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+    setStage(t('canceling'));
+  };
+
+  // ---------- сборка в Figma ----------
+  function buildInFigma(payload, opts) {
+    return new Promise((resolve, reject) => {
+      state.pendingBuild = { resolve, reject };
+      parent.postMessage({ pluginMessage: { type: 'build', payload, opts } }, '*');
+    });
+  }
+
+  // ---------- основной сценарий ----------
+  function selectedWidths() {
+    const ws = [...state.widths];
+    const custom = Number($('custom-w').value);
+    if (custom >= 320 && custom <= 3000 && $('custom-chip').classList.contains('on')) ws.push(custom);
+    return [...new Set(ws)].sort((a, b) => b - a);
+  }
+
+  async function fetchSnapshot(body, endpoint) {
+    state.fetchCtrl = new AbortController();
+    const resp = await fetch(serverUrl() + (endpoint || '/snapshot'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, lang: detectLang() }),
+      signal: state.fetchCtrl.signal,
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  }
+
+  async function runVariants(variants, endpoint, extraBody, urlForHistory, metaText) {
+    hideCards();
+    setBusy(true);
+    setBar(0);
+    const batchId = 'b' + Date.now() + Math.random().toString(36).slice(2, 6);
+    const totals = { created: 0, autoLayout: 0, styles: 0, imagesSkipped: 0, svgFailed: 0 };
+    try {
+      if (!(await ping())) throw new Error(t('serverHelp'));
+      for (let i = 0; i < variants.length; i++) {
+        if (state.cancelled) break;
+        const v = variants[i];
+        const prefix = variants.length > 1 ? (i + 1) + '/' + variants.length + ' · ' : '';
+        setStage(prefix + t('stageOpen', v.width, v.scheme ? t(v.scheme).toLowerCase() : ''));
+        setBar(i / variants.length);
+
+        const data = await fetchSnapshot({
+          ...extraBody,
+          width: v.width,
+          colorScheme: v.scheme,
+          screenshot: state.screenshot,
+          maxHeight: Number($('maxh').value),
+        }, endpoint);
+        if (state.cancelled) break;
+
+        const imgN = Object.keys(data.imageData || {}).length;
+        setStage(prefix + t('stageImages', imgN));
+        data.imageData = await normalizeImages(data.imageData, (d, tot) => setBar((i + (d / tot) * 0.4) / variants.length));
+        if (state.cancelled) break;
+
+        setStage(prefix + t('stageBuild'));
+        const label = v.label + (data.truncated ? ' · ' + t('truncated') : '');
+        const res = await buildInFigma(data, {
+          batchId,
+          label,
+          autoLayout: state.autoLayout,
+          makeStyles: state.styles && i === 0,
+          screenshot: state.screenshot,
+          lang: detectLang(),
+          screenshotName: t('screenshotName'),
+        });
+        totals.created += res.created;
+        totals.autoLayout += res.autoLayout;
+        totals.styles += res.styles;
+        totals.imagesSkipped += res.imagesSkipped;
+        totals.svgFailed += res.svgFailed;
+      }
+      if (state.cancelled) {
+        showError(t('errCancelled'));
+      } else {
+        const lines = [t('lines_layers', totals.created, variants.length)];
+        if (state.autoLayout) lines.push(t('lines_al', totals.autoLayout));
+        if (totals.styles) lines.push(t('lines_styles', totals.styles));
+        if (totals.imagesSkipped) lines.push(t('lines_imgSkipped', totals.imagesSkipped));
+        if (totals.svgFailed) lines.push(t('lines_svgFailed', totals.svgFailed));
+        showDone(lines);
+        pushHistory(urlForHistory, metaText);
+      }
+    } catch (e) {
+      showError(state.cancelled ? t('errCancelled') : String(e.message || e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  $('go').onclick = async () => {
+    if (state.busy) return;
+    const url = $('url').value.trim();
+    if (!url) { showError(t('errNoUrl')); return; }
+    hideCards();
+
+    if (state.login) {
+      setBusy(true);
+      try {
+        if (!(await ping())) throw new Error(t('serverHelp'));
+        setStage(t('openingBrowser'));
+        const w = selectedWidths()[0] || 1440;
+        const r = await fetchSnapshot({ url, width: w, colorScheme: state.theme === 'dark' ? 'dark' : 'light' }, '/session/open');
+        state.session = { id: r.sessionId, width: r.width };
+        $('session-hint').textContent = t('sessionHint', r.width);
+        $('progress').style.display = 'none';
+      } catch (e) {
+        showError(String(e.message || e));
+      } finally {
+        setBusy(false);
+        updateLoginUI();
+      }
+      return;
+    }
+
+    const widths = selectedWidths();
+    if (!widths.length) { showError(t('errNoDevice')); return; }
+    const schemes = state.theme === 'both' ? ['light', 'dark'] : [state.theme];
+    const host = url.replace(/^https?:\/\//, '').split('/')[0];
+    const variants = [];
+    for (const w of widths) {
+      for (const s of schemes) {
+        variants.push({
+          width: w,
+          scheme: s,
+          label: host + ' · ' + w + (schemes.length > 1 ? ' · ' + t(s).toLowerCase() : ''),
+        });
+      }
+    }
+    const meta = widths.join('/') + (state.theme === 'both' ? ' · ' + t('themes2') : '');
+    await runVariants(variants, '/snapshot', { url }, url, meta);
+  };
+
+  $('session-capture').onclick = async () => {
+    if (state.busy || !state.session) return;
+    const host = ($('url').value || 'page').replace(/^https?:\/\//, '').split('/')[0];
+    await runVariants(
+      [{ width: state.session.width, scheme: null, label: host + ' · ' + state.session.width + ' · ' + t('signedIn') }],
+      '/session/capture',
+      { sessionId: state.session.id },
+      $('url').value.trim() || host,
+      state.session.width + ' · ' + t('signedIn')
+    );
+  };
+
+  async function closeSession() {
+    const s = state.session;
+    state.session = null;
+    updateLoginUI();
+    if (s) {
+      try { await fetchSnapshot({ sessionId: s.id }, '/session/close'); } catch (e) {}
+    }
+  }
+  $('session-close').onclick = closeSession;
+
+  // ---------- сообщения от плагина ----------
+  window.onmessage = (event) => {
+    const msg = event.data && event.data.pluginMessage;
+    if (!msg) return;
+    if (msg.type === 'init') {
+      applySettings(msg.settings);
+      state.history = msg.history || [];
+      applyLang();
+    } else if (msg.type === 'progress') {
+      if (msg.total) setBar(msg.done / msg.total);
+    } else if (msg.type === 'status') {
+      setStage(msg.key === 'make-styles' ? t('statusStyles') : t('statusUpload'));
+    } else if (msg.type === 'done') {
+      if (state.pendingBuild) { state.pendingBuild.resolve(msg.result); state.pendingBuild = null; }
+    } else if (msg.type === 'cancelled') {
+      if (state.pendingBuild) { state.pendingBuild.reject(new Error(t('errCancelled'))); state.pendingBuild = null; }
+    } else if (msg.type === 'error') {
+      if (state.pendingBuild) { state.pendingBuild.reject(new Error(msg.text)); state.pendingBuild = null; }
+      else showError(msg.text);
+    }
+  };
+
+  // ---------- донаты ----------
+  $('don-ton').onclick = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(TON_ADDRESS);
+      ok = true;
+    } catch (e) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = TON_ADDRESS;
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand('copy');
+        ta.remove();
+      } catch (e2) {}
+    }
+    $('don-ton').textContent = ok ? t('donCopied') : TON_ADDRESS;
+    setTimeout(() => { $('don-ton').textContent = t('donBtn'); }, 2500);
+  };
+
+  // ---------- запуск ----------
+  $('server').value = DEFAULT_SERVER;
+  applyLang();
+  renderChips();
+  updateLoginUI();
+  ping();
+  setInterval(() => { if (!state.busy) ping(); }, 5000);
+  $('server-pill').onclick = ping;
+  parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
+</script>
