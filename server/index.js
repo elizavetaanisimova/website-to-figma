@@ -30,12 +30,17 @@ let headlessBrowserPromise = null;
 
 async function launchBrowser(headless) {
   const attempts = [{ channel: 'chrome' }, { channel: 'msedge' }, {}];
+  const args = ['--disable-blink-features=AutomationControlled'];
+  if (CLOUD) {
+    // контейнеры без user namespaces и с маленьким /dev/shm
+    args.push('--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage');
+  }
   let lastErr = null;
   for (const extra of attempts) {
     try {
       const browser = await chromium.launch({
         headless,
-        args: ['--disable-blink-features=AutomationControlled'],
+        args,
         ...extra,
       });
       console.log('[browser] запущен:', extra.channel || 'bundled chromium', headless ? '(headless)' : '(с окном)');

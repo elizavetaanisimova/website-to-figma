@@ -1,0 +1,17 @@
+# Blueprint для Render.com: New + → Blueprint → выбрать этот репозиторий.
+# Бесплатный тариф: 512 MB RAM / 0.1 CPU — работает, но импорт медленный
+# и сервис засыпает после 15 минут простоя (холодный старт ~1 мин).
+services:
+  - type: web
+    name: site-to-figma
+    runtime: docker
+    rootDir: server
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: CLOUD
+        value: "1"
+      - key: MAX_CONCURRENT
+        value: "1"
+      - key: RATE_LIMIT
+        value: "15"
