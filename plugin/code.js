@@ -6,6 +6,10 @@ figma.showUI(__html__, { width: 420, height: 640, themeColors: true });
 
 let fontIndex = null; // Map<lowerFamily, { family, styles: Map<normStyle, actualStyle> }>
 const fontCache = new Map();
+// Отчёт по подбору за один импорт: какие семейства сайта заменены близкими.
+// Заполняется noteFont() на месте вызова (не внутри кэша resolveFont, иначе
+// повторные импорты не считались бы). build() его обнуляет и читает.
+let fontReport = null;
 
 const GENERIC_FAMILIES = {
   'sans-serif': 'Inter',
@@ -19,6 +23,54 @@ const GENERIC_FAMILIES = {
   'ui-monospace': 'Roboto Mono',
   'cursive': 'Inter',
   'fantasy': 'Inter',
+};
+
+// «Умный подбор»: близкие замены для проприетарных и системных шрифтов, которых
+// в Figma нет. Значения — семейства из библиотеки Google Fonts (она доступна в
+// Figma целиком) либо метрически-совместимые аналоги. Пробуются ПОСЛЕ точного
+// совпадения имени и ДО отката в Inter — файлы не скачиваются и не ставятся.
+// Ключи — имя семейства в нижнем регистре, без кавычек.
+const FONT_SUBSTITUTES = {
+  // геометрические гротески
+  'proxima nova': 'Montserrat', 'proxima-nova': 'Montserrat', 'proxima': 'Montserrat',
+  'gotham': 'Montserrat', 'gotham rounded': 'Nunito',
+  'circular': 'Poppins', 'circular std': 'Poppins', 'circularxx': 'Poppins',
+  'gilroy': 'Poppins', 'sofia pro': 'Poppins', 'objektiv': 'Poppins', 'geomanist': 'Poppins',
+  'futura': 'Jost', 'futura pt': 'Jost', 'century gothic': 'Jost', 'twentieth century': 'Jost',
+  'avenir': 'Nunito Sans', 'avenir next': 'Nunito Sans',
+  'brandon grotesque': 'Montserrat', 'brandon text': 'Montserrat',
+  // нео-гротески и гуманистические — сначала реальный системный алиас, потом Google-аналог
+  'helvetica': ['Helvetica Neue', 'Inter'], 'helvetica neue': 'Inter', 'neue helvetica': 'Inter',
+  'arial': 'Arimo', 'liberation sans': 'Arimo',
+  'graphik': 'Inter', 'founders grotesk': 'Inter', 'aktiv grotesk': 'Inter',
+  'neue haas grotesk': 'Inter', 'neue haas unica': 'Inter', 'akzidenz grotesk': 'Inter',
+  'univers': 'Inter', 'trade gothic': 'Inter', 'benton sans': 'Inter',
+  'franklin gothic': 'Libre Franklin', 'itc franklin gothic': 'Libre Franklin',
+  'gill sans': 'Mulish', 'frutiger': 'Inter', 'myriad': 'Inter', 'myriad pro': 'Inter',
+  'segoe ui': 'Inter', 'segoe': 'Inter', 'tahoma': 'Inter', 'geneva': 'Inter',
+  'lucida grande': 'Inter', 'lucida sans': 'Inter',
+  'verdana': 'Open Sans', 'trebuchet ms': 'Open Sans', 'trebuchet': 'Open Sans',
+  'calibri': 'Carlito', 'candara': 'Inter', 'corbel': 'Inter',
+  'sf pro': 'Inter', 'sf pro text': 'Inter', 'sf pro display': 'Inter',
+  'sf pro rounded': 'Nunito', 'sf compact': 'Inter', 'sf ui text': 'Inter', 'sf ui display': 'Inter',
+  // засечки
+  'times': ['Times New Roman', 'Tinos'], 'times new roman': 'Tinos', 'liberation serif': 'Tinos',
+  'georgia': 'Gelasio',
+  'garamond': 'EB Garamond', 'adobe garamond': 'EB Garamond', 'garamond premier': 'EB Garamond',
+  'itc garamond': 'EB Garamond', 'cormorant garamond': 'Cormorant Garamond',
+  'baskerville': 'Libre Baskerville', 'itc new baskerville': 'Libre Baskerville',
+  'caslon': 'Libre Caslon Text', 'adobe caslon': 'Libre Caslon Text',
+  'didot': 'Playfair Display', 'bodoni': 'Playfair Display', 'bodoni mt': 'Playfair Display',
+  'minion': 'PT Serif', 'minion pro': 'PT Serif', 'sabon': 'PT Serif', 'palatino': 'PT Serif',
+  'palatino linotype': 'PT Serif', 'book antiqua': 'PT Serif', 'constantia': 'PT Serif',
+  'freight': 'Lora', 'freight text': 'Lora', 'tiempos': 'Lora', 'tiempos text': 'Lora',
+  'cambria': 'Caladea',
+  // брусковые
+  'rockwell': 'Roboto Slab', 'clarendon': 'Roboto Slab', 'museo slab': 'Roboto Slab',
+  // моноширинные
+  'sf mono': 'Roboto Mono', 'menlo': 'Roboto Mono', 'monaco': 'Roboto Mono',
+  'consolas': 'Inconsolata', 'courier': ['Courier New', 'Cousine'], 'courier new': 'Cousine',
+  'lucida console': 'Roboto Mono', 'andale mono': 'Roboto Mono', 'liberation mono': 'Cousine',
 };
 
 const WEIGHT_CANDIDATES = {
@@ -82,10 +134,25 @@ async function resolveFont(familyStack, weight, italic) {
     for (const raw of String(familyStack || '').split(',')) {
       const fam = raw.trim().replace(/^["']|["']$/g, '');
       if (!fam) continue;
-      tried.push({ fam: GENERIC_FAMILIES[fam.toLowerCase()] || fam, requested: true });
+      const k = fam.toLowerCase();
+      if (GENERIC_FAMILIES[k]) {
+        // CSS-обобщение (sans-serif, serif, system-ui…) — заданная замена
+        tried.push({ fam: GENERIC_FAMILIES[k], requested: true, kind: 'generic', site: fam });
+      } else {
+        // именованное семейство: сначала пробуем его само (вдруг стоит в системе
+        // или это Google-шрифт из библиотеки Figma), затем близкую замену
+        tried.push({ fam, requested: true, kind: 'exact', site: fam });
+        const sub = FONT_SUBSTITUTES[k];
+        if (sub) {
+          // значение — семейство или список кандидатов (реальный алиас, затем аналог)
+          for (const s of (Array.isArray(sub) ? sub : [sub])) {
+            tried.push({ fam: s, requested: true, kind: 'substitute', site: fam });
+          }
+        }
+      }
     }
     for (const fam of ['Inter', 'Roboto', 'Helvetica Neue', 'Arial']) {
-      tried.push({ fam, requested: false });
+      tried.push({ fam, requested: false, kind: 'fallback', site: null });
     }
     for (const t of tried) {
       const entry = index.get(t.fam.toLowerCase());
@@ -94,16 +161,33 @@ async function resolveFont(familyStack, weight, italic) {
       if (!style) continue;
       try {
         await figma.loadFontAsync({ family: entry.family, style });
-        return { fontName: { family: entry.family, style }, requested: t.requested };
+        return {
+          fontName: { family: entry.family, style },
+          requested: t.requested, kind: t.kind,
+          siteFamily: t.site, usedFamily: entry.family,
+        };
       } catch (e) {
         /* пробуем следующий */
       }
     }
     await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
-    return { fontName: { family: 'Inter', style: 'Regular' }, requested: false };
+    return {
+      fontName: { family: 'Inter', style: 'Regular' },
+      requested: false, kind: 'fallback', siteFamily: null, usedFamily: 'Inter',
+    };
   })();
   fontCache.set(key, promise);
   return promise;
+}
+
+// Учитываем подбор для отчёта. Считаем только реальные замены (proprietary →
+// близкое семейство), дедуп по имени семейства сайта. Вызывается на месте, а не
+// внутри resolveFont, чтобы кэш не съедал учёт при повторных импортах.
+function noteFont(resolved) {
+  if (!fontReport || !resolved) return;
+  if (resolved.kind === 'substitute' && resolved.siteFamily) {
+    fontReport.subs[resolved.siteFamily.toLowerCase()] = resolved.usedFamily;
+  }
 }
 
 // ---------- заливки ----------
@@ -200,6 +284,7 @@ async function makeText(n, parent, ax, ay, ctx) {
   if (!chars.trim()) return null;
 
   const resolved = await resolveFont(s.family, s.weight || 400, !!s.italic);
+  noteFont(resolved);
   if (!resolved.requested && isPUA(chars)) {
     // иконка из иконочного шрифта, которого нет — не рисуем «тофу»
     ctx.stats.iconSkipped++;
@@ -460,6 +545,7 @@ async function createSiteStyles(data, hostname, stats, folders) {
   for (const info of topTexts) {
     try {
       const resolved = await resolveFont(info.family, info.weight, info.italic);
+      noteFont(resolved);
       const ts = figma.createTextStyle();
       const famShort = String(info.family).split(',')[0].replace(/["']/g, '').trim() || 'Font';
       ts.name = hostname + '/' + folders.text + '/' + famShort + ' ' + info.size + ' · ' + info.weight + (info.italic ? ' Italic' : '');
@@ -502,29 +588,43 @@ function buildScreenshotFrame(slices, W, H, label, stats, name) {
 
 // ---------- сборка ----------
 
-const es = (n) => (n === 1 ? '' : 's');
+const enS = (n) => (n === 1 ? '' : 's');
 
 const NOTIFY = {
   en: {
-    done: (n, al) => n + ' layer' + es(n) + ' imported' + (al ? ', ' + al + ' auto layout frame' + es(al) : ''),
+    done: (n, al, fs) => n + ' layer' + enS(n) + ' imported'
+      + (al ? ', ' + al + ' auto layout frame' + enS(al) : '')
+      + (fs ? ' · ' + fs + ' font' + enS(fs) + ' matched to close alternatives' : ''),
     cancelled: 'Import canceled',
   },
   ru: {
-    done: (n, al) => 'Слоёв: ' + n + (al ? ', Auto Layout: ' + al : ''),
+    done: (n, al, fs) => 'Слоёв: ' + n + (al ? ', Auto Layout: ' + al : '')
+      + (fs ? ' · подобрано шрифтов: ' + fs : ''),
     cancelled: 'Импорт отменён',
+  },
+  es: {
+    done: (n, al, fs) => n + (n === 1 ? ' capa importada' : ' capas importadas')
+      + (al ? ', ' + al + (al === 1 ? ' frame de auto layout' : ' frames de auto layout') : '')
+      + (fs ? ' · ' + fs + (fs === 1 ? ' fuente sustituida' : ' fuentes sustituidas') : ''),
+    cancelled: 'Importación cancelada',
   },
 };
 
 const STYLE_FOLDERS = {
   en: { colors: 'Colors', text: 'Text' },
   ru: { colors: 'Цвета', text: 'Текст' },
+  es: { colors: 'Colores', text: 'Texto' },
 };
+
+// Язык из UI может прийти чем угодно — незнакомый откатываем на английский.
+const pickLang = (lang) => (lang === 'ru' || lang === 'es' ? lang : 'en');
 
 // Раскладка пакета: варианты одной страницы идут вправо, новая страница — новой строкой.
 const batchState = { id: null, startX: 0, nextX: 0, y: 0, rowMaxH: 0, frames: [] };
 
 async function build(data, opts) {
   const stats = { images: 0, imagesSkipped: 0, svgFailed: 0, iconSkipped: 0, failed: 0, autoLayout: 0, styles: 0 };
+  fontReport = { subs: {} }; // сброс отчёта по подбору шрифтов на этот импорт
   const hashByRef = {};
 
   figma.ui.postMessage({ type: 'status', key: 'upload-images' });
@@ -589,7 +689,7 @@ async function build(data, opts) {
       try {
         hostname = String(data.url || '').replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '') || 'site';
       } catch (e) {}
-      await createSiteStyles(data, hostname, stats, STYLE_FOLDERS[opts.lang === 'ru' ? 'ru' : 'en']);
+      await createSiteStyles(data, hostname, stats, STYLE_FOLDERS[pickLang(opts.lang)]);
     }
   } catch (e) {
     if (String(e && e.message) === '__cancelled__' && rootFrame) {
@@ -609,6 +709,7 @@ async function build(data, opts) {
     iconSkipped: stats.iconSkipped,
     autoLayout: stats.autoLayout,
     styles: stats.styles,
+    fontSubs: Object.keys(fontReport.subs).length,
   };
 }
 
@@ -620,11 +721,15 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'ui-ready') {
     let settings = null;
     let history = [];
+    let sites = {};
     try {
       settings = await figma.clientStorage.getAsync('settings');
       history = (await figma.clientStorage.getAsync('history')) || [];
+      // Память по домену: что дало хороший импорт для каждого сайта.
+      // Отдельный ключ — старые настройки и история продолжают работать как были.
+      sites = (await figma.clientStorage.getAsync('sites')) || {};
     } catch (e) {}
-    figma.ui.postMessage({ type: 'init', settings: settings || null, history });
+    figma.ui.postMessage({ type: 'init', settings: settings || null, history, sites });
     return;
   }
 
@@ -635,6 +740,11 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'save-history') {
     try { await figma.clientStorage.setAsync('history', msg.history); } catch (e) {}
+    return;
+  }
+
+  if (msg.type === 'save-sites') {
+    try { await figma.clientStorage.setAsync('sites', msg.sites || {}); } catch (e) {}
     return;
   }
 
@@ -652,11 +762,11 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'build') {
     cancelRequested = false;
-    const say = NOTIFY[(msg.opts && msg.opts.lang) === 'ru' ? 'ru' : 'en'];
+    const say = NOTIFY[pickLang(msg.opts && msg.opts.lang)];
     try {
       const res = await build(msg.payload, msg.opts || {});
       figma.ui.postMessage({ type: 'done', result: res });
-      figma.notify(say.done(res.created, res.autoLayout));
+      figma.notify(say.done(res.created, res.autoLayout, res.fontSubs));
     } catch (e) {
       if (String(e && e.message) === '__cancelled__') {
         figma.ui.postMessage({ type: 'cancelled' });

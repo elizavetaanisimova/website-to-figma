@@ -133,21 +133,11 @@
      на коралле проваливается ниже 4.5:1 */
   .tagline { font-size: 10.5px; margin-top: 2px; font-weight: 450; color: #FFFFFF; }
   .hero-art { flex: none; margin: -2px 0 -8px; }
-  /* статус сервера и выбор языка идут одной строкой; в узкой панели переносятся */
+  /* выбор языка живёт в шапке отдельной строкой; в узкой панели переносится */
   .hero-row {
     margin-top: 11px;
     display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
   }
-  .server-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 11px; border: 0; border-radius: 999px;
-    background: var(--cream); color: var(--cream-ink);
-    font: inherit; font-size: 10px; font-weight: 550; cursor: pointer;
-    box-shadow: var(--sh-knob); transition: transform .06s;
-  }
-  .server-pill:active { transform: translateY(1px); }
-  .server-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); transition: background .3s; }
-  .server-pill.on .dot { background: var(--green); }
 
   /* ---------- выбор языка ----------
      Живёт на коралловой плашке, поэтому цвета зашиты, а не взяты из темы.
@@ -354,11 +344,12 @@
      Форма табов кита: утопленный жёлоб (--fill), активная белая пилюля
      с двойной тенью (--sh-knob). Цвет наш — оранжевый текст. */
   .seg {
-    display: inline-flex; background: var(--fill); border-radius: var(--r-md);
+    display: flex; background: var(--fill); border-radius: var(--r-md);
     padding: 4px; gap: 2px;
   }
+  /* сегменты равной ширины — тянутся на всю карточку, чтобы вес не съезжал */
   .seg button {
-    flex: none; padding: 8px 16px; border: 0;
+    flex: 1 1 0; padding: 8px 0; border: 0; text-align: center;
     background: transparent; color: var(--plum);
     font: inherit; font-size: 11px; font-weight: 600;
     border-radius: 12px; cursor: pointer; transition: all .13s;
@@ -583,9 +574,6 @@
     <h1>Website to Figma</h1>
     <div class="tagline" data-i18n="tagline"></div>
     <div class="hero-row">
-      <button class="server-pill" id="server-pill" type="button">
-        <span class="dot"></span><span id="server-label"></span>
-      </button>
       <div class="lang-seg" id="lang-seg" role="group">
         <button type="button" data-v="en">EN</button>
         <button type="button" data-v="ru">RU</button>
@@ -1536,8 +1524,12 @@
   // Состояние держим отдельно от подписи: смена языка перерисовывает пилюлю
   // сразу, не дожидаясь следующего пинга.
   function renderServerPill() {
+    // Пилюлю статуса убрали из шапки — состояние сервера всё равно опрашивается
+    // (ping/applyCaps), просто больше нечего перерисовывать.
+    const pill = $('server-pill');
+    if (!pill) return;
     const s = state.serverState;
-    $('server-pill').classList.toggle('on', s === 'on' || s === 'cloud');
+    pill.classList.toggle('on', s === 'on' || s === 'cloud');
     $('server-label').textContent = t(s === 'cloud' ? 'serverCloud' : s === 'on' ? 'serverOn' : 'serverOff');
   }
 
@@ -2192,6 +2184,5 @@
   // и по клику на плашку плагин пингует отдельно. На пятисекундном интервале
   // тысяча открытых окон дала бы 200 запросов в секунду на облачный сервер.
   setInterval(() => { if (!state.busy) ping(); }, 30000);
-  $('server-pill').onclick = ping;
   parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
 </script>
