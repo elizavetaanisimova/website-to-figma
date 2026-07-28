@@ -643,6 +643,13 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Внешние ссылки (Telegram) открываются только из главного потока
+  if (msg.type === 'open-url') {
+    const url = String(msg.url || '');
+    if (/^https:\/\//i.test(url)) figma.openExternal(url);
+    return;
+  }
+
   if (msg.type === 'build') {
     cancelRequested = false;
     const say = NOTIFY[(msg.opts && msg.opts.lang) === 'ru' ? 'ru' : 'en'];
