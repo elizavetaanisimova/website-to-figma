@@ -202,7 +202,7 @@
      Фокус рисуется только кольцом. */
   .url-wrap { position: relative; }
   .url-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--plum); opacity: .55; }
-  input[type=text], input[type=url], input[type=number], select {
+  input[type=text], input[type=url], input[type=number], input[type=password], select {
     width: 100%;
     padding: 12px 14px;
     border-radius: var(--r-md);
@@ -213,6 +213,26 @@
   }
   .url-wrap input { padding-left: 38px; }
   input:focus, select:focus { box-shadow: 0 0 0 3px var(--ring); }
+
+  /* Поле токена: замок слева, глаз справа — как поле URL, форма кита */
+  .token-wrap { position: relative; }
+  .token-wrap > svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--plum); opacity: .55; pointer-events: none;
+  }
+  .token-wrap input { padding-left: 38px; padding-right: 44px; }
+  .token-wrap input[type=password] { letter-spacing: .16em; }
+  .token-eye {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; padding: 0; margin: 0; border: 0;
+    border-radius: 12px; background: transparent; color: var(--ink2);
+    cursor: pointer; transition: background .15s, color .15s, transform .1s;
+  }
+  .token-eye:hover { background: var(--fill); color: var(--plum); }
+  .token-eye:active { transform: translateY(-50%) scale(.9); }
+  .token-eye:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .token-eye svg { width: 15px; height: 15px; display: block; }
 
   /* карточка URL сама работает полем: кольцо фокуса рисуется на ней */
   #url-card { padding: 5px; }
@@ -711,7 +731,13 @@
     </div>
     <div class="wide">
       <label class="field-label" for="bypass" data-i18n="bypassLabel"></label>
-      <input type="password" id="bypass" spellcheck="false" autocomplete="off">
+      <div class="token-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4.5" y="10.5" width="15" height="9.5" rx="3"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+        </svg>
+        <input type="password" id="bypass" spellcheck="false" autocomplete="off">
+        <button class="token-eye" id="bypass-eye" type="button"></button>
+      </div>
     </div>
   </div>
 </details>
@@ -810,7 +836,7 @@
       loginDesc: 'Opens a real browser — sign in, then import',
       loginDescCloud: 'Local server only',
       advanced: 'Advanced', maxh: 'Max height', language: 'Language', serverLabel: 'Server address',
-      bypassLabel: 'Access token (optional)',
+      bypassLabel: 'Access token (optional)', bypassShow: 'Show token', bypassHide: 'Hide token',
       importBtn: 'Import', loginOpenBtn: 'Open a browser to sign in',
       captureBtn: 'Import the open page', closeTitle: 'Close browser',
       cancelBtn: 'Cancel', canceling: 'Canceling…',
@@ -879,7 +905,7 @@
       loginDesc: 'Откроется настоящий браузер — войдите, потом импортируйте',
       loginDescCloud: 'Только со своим сервером',
       advanced: 'Дополнительно', maxh: 'Макс. высота', language: 'Язык', serverLabel: 'Адрес сервера',
-      bypassLabel: 'Токен доступа (необязательно)',
+      bypassLabel: 'Токен доступа (необязательно)', bypassShow: 'Показать токен', bypassHide: 'Скрыть токен',
       importBtn: 'Импортировать', loginOpenBtn: 'Открыть браузер для входа',
       captureBtn: 'Импортировать открытую страницу', closeTitle: 'Закрыть браузер',
       cancelBtn: 'Отменить', canceling: 'Отменяем…',
@@ -950,7 +976,7 @@
       loginDesc: 'Abre un navegador real: inicia sesión y luego importa',
       loginDescCloud: 'Solo con servidor propio',
       advanced: 'Avanzado', maxh: 'Altura máx.', language: 'Idioma', serverLabel: 'Dirección del servidor',
-      bypassLabel: 'Token de acceso (opcional)',
+      bypassLabel: 'Token de acceso (opcional)', bypassShow: 'Mostrar token', bypassHide: 'Ocultar token',
       importBtn: 'Importar', loginOpenBtn: 'Abrir el navegador para iniciar sesión',
       captureBtn: 'Importar la página abierta', closeTitle: 'Cerrar el navegador',
       cancelBtn: 'Cancelar', canceling: 'Cancelando…',
@@ -1048,6 +1074,7 @@
     $('find').title = t('findTitle');
     $('url').setAttribute('aria-label', t('urlLabel'));
     $('custom-w').setAttribute('aria-label', t('customLabel'));
+    renderEye();
     $('session-close').title = t('closeTitle');
     $('session-close').setAttribute('aria-label', t('closeTitle'));
     $('pages-all').textContent = t('pagesAll');
@@ -1195,6 +1222,23 @@
   };
   $('server').oninput = saveSettings;
   $('bypass').oninput = saveSettings;
+  // Токен доступа — секрет по умолчанию скрыт, глаз показывает/прячет
+  const EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2.6 2.6 0 0 0 3.5 3.5"/><path d="M9.8 5.3A9.6 9.6 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-2.4 3.3"/><path d="M6 6.3A16.7 16.7 0 0 0 2 12s3.6 6.5 10 6.5a9.6 9.6 0 0 0 3.1-.5"/></svg>';
+  function renderEye() {
+    const shown = $('bypass').type === 'text';
+    const b = $('bypass-eye');
+    b.innerHTML = shown ? EYE_OFF : EYE_ON;
+    b.title = t(shown ? 'bypassHide' : 'bypassShow');
+    b.setAttribute('aria-label', b.title);
+  }
+  $('bypass-eye').onclick = () => {
+    const inp = $('bypass');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    renderEye();
+    inp.focus();
+  };
+  renderEye();
   $('maxh').onchange = saveSettings;
   document.querySelectorAll('#lang-seg button').forEach((b) => {
     b.onclick = () => {
