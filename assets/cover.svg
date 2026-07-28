@@ -1,100 +1,167 @@
-<svg width="1920" height="960" viewBox="0 0 1920 960" xmlns="http://www.w3.org/2000/svg" font-family="Inter, -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif">
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"
+     font-family="-apple-system, 'SF Pro Display', Inter, 'Segoe UI', sans-serif">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0C1022"/>
-      <stop offset="1" stop-color="#131A38"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.72" cy="0.4" r="0.65">
-      <stop offset="0" stop-color="#4E8EF7" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#4E8EF7" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4E8EF7"/>
-      <stop offset="1" stop-color="#7B5CF0"/>
-    </linearGradient>
-    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#4E8EF7"/>
-      <stop offset="1" stop-color="#9D7BFF"/>
-    </linearGradient>
-    <pattern id="dots" width="36" height="36" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="2" r="1.6" fill="#ffffff" opacity="0.05"/>
-    </pattern>
+    <!-- ── КОТ, ВЫГЛЯДЫВАЮЩИЙ ИЗ-ЗА КРАЯ ─────────────────────────────── -->
+    <g id="cat-peek">
+      <path d="M16 340 V172 C16 132 44 96 84 78 L74 34 L118 64 C132 56 148 56 162 64 L206 34 L196 78
+               C236 96 264 132 264 172 V340 Z"
+            fill="#DE6B32" stroke="#DE6B32" stroke-width="9" stroke-linejoin="round"/>
+      <circle cx="96" cy="210" r="38" fill="#FFFFFF"/>
+      <circle cx="184" cy="210" r="38" fill="#FFFFFF"/>
+      <circle cx="96" cy="213" r="22" fill="#1B1A18"/>
+      <circle cx="184" cy="213" r="22" fill="#1B1A18"/>
+    </g>
+
+    <!-- ── СИДЯЩИЙ ЧЁРНЫЙ КОТ (дудл) ─────────────────────────────────── -->
+    <g id="cat-sit">
+      <path d="M14 132 C14 96 26 62 46 40 L34 2 L82 30 Q100 24 118 30 L166 2 L154 40
+               C174 62 186 96 186 132 Z"
+            fill="#1B1A18" stroke="#1B1A18" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="72" cy="76" r="17" fill="#FFFFFF"/>
+      <circle cx="128" cy="76" r="17" fill="#FFFFFF"/>
+      <circle cx="72" cy="78" r="9.5" fill="#1B1A18"/>
+      <circle cx="128" cy="78" r="9.5" fill="#1B1A18"/>
+      <path d="M182 126 C214 132 226 112 220 82" fill="none" stroke="#1B1A18"
+            stroke-width="13" stroke-linecap="round"/>
+    </g>
+
+    <!-- ── СПЯЩИЙ КОТ КЛУБКОМ ────────────────────────────────────────── -->
+    <g id="cat-sleep">
+      <path d="M8 110 C8 54 56 22 116 22 C176 22 222 56 222 110 Z"
+            fill="#1B1A18" stroke="#1B1A18" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M34 44 L24 10 L64 28 Z" fill="#1B1A18" stroke="#1B1A18" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M216 104 C250 100 258 76 242 60" fill="none" stroke="#1B1A18"
+            stroke-width="15" stroke-linecap="round"/>
+      <path d="M54 72 q11 11 22 0" fill="none" stroke="#F3EEE9" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M98 72 q11 11 22 0" fill="none" stroke="#F3EEE9" stroke-width="5.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- ── КОТ-БАТОН, КОНТУРОМ ───────────────────────────────────────── -->
+    <g id="cat-loaf" fill="none" stroke="#1B1A18" stroke-width="6"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30 140 C30 84 78 48 148 48 C222 48 268 84 268 140"/>
+      <path d="M52 78 L44 34 L86 58"/>
+      <path d="M244 82 L256 40 L212 58"/>
+      <path d="M266 134 C300 128 312 100 300 74"/>
+      <path d="M12 140 H320"/>
+      <path d="M104 96 q12 13 24 0" /><path d="M168 96 q12 13 24 0"/>
+      <path d="M142 116 q10 8 20 0"/>
+      <path d="M92 108 L54 100 M92 116 L56 122 M204 108 L242 100 M204 116 L240 122"
+            stroke-width="4"/>
+    </g>
+
+    <!-- ── СЛЕД ЛАПЫ ─────────────────────────────────────────────────── -->
+    <g id="paw">
+      <ellipse cx="18" cy="22" rx="14" ry="12" fill="#E5A184"/>
+      <circle cx="3" cy="5" r="5" fill="#E5A184"/>
+      <circle cx="17" cy="0" r="5" fill="#E5A184"/>
+      <circle cx="31" cy="4" r="5" fill="#E5A184"/>
+    </g>
+
+    <!-- ── ИСКОРКА ───────────────────────────────────────────────────── -->
+    <path id="spark" d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0 Z"
+          fill="#EE8B5F"/>
   </defs>
 
-  <rect width="1920" height="960" fill="url(#bg)"/>
-  <rect width="1920" height="960" fill="url(#dots)"/>
-  <rect width="1920" height="960" fill="url(#glow)"/>
+  <!-- ФОН -->
+  <rect width="1920" height="1080" fill="#F3EEE9"/>
 
-  <!-- ЛЕВАЯ КОЛОНКА -->
+  <!-- искорки -->
   <g>
-    <rect x="150" y="252" width="292" height="46" rx="23" fill="none" stroke="#4E8EF7" stroke-opacity="0.55" stroke-width="2"/>
-    <text x="296" y="282" text-anchor="middle" font-size="19" font-weight="600" letter-spacing="3" fill="#7FA9F9">FREE · OPEN SOURCE</text>
-
-    <text x="146" y="420" font-size="104" font-weight="800" letter-spacing="-2" fill="#ffffff">Site to Figma</text>
-    <text x="150" y="492" font-size="38" font-weight="400" fill="#A7B0C8">Import any website as editable layers —</text>
-    <text x="150" y="544" font-size="38" font-weight="400" fill="#A7B0C8">with Auto Layout, styles and real fonts</text>
-
-    <!-- фичи-пилюли -->
-    <g font-size="22" font-weight="600" fill="#DCE4F5">
-      <rect x="150" y="608" width="190" height="52" rx="26" fill="#1B2342" stroke="#2A3560" stroke-width="1.5"/>
-      <text x="245" y="641" text-anchor="middle">Auto Layout</text>
-      <rect x="356" y="608" width="230" height="52" rx="26" fill="#1B2342" stroke="#2A3560" stroke-width="1.5"/>
-      <text x="471" y="641" text-anchor="middle">Dark &amp; light theme</text>
-      <rect x="602" y="608" width="200" height="52" rx="26" fill="#1B2342" stroke="#2A3560" stroke-width="1.5"/>
-      <text x="702" y="641" text-anchor="middle">Multi-device</text>
-      <rect x="150" y="676" width="250" height="52" rx="26" fill="#1B2342" stroke="#2A3560" stroke-width="1.5"/>
-      <text x="275" y="709" text-anchor="middle">Behind-login sites</text>
-      <rect x="416" y="676" width="256" height="52" rx="26" fill="#1B2342" stroke="#2A3560" stroke-width="1.5"/>
-      <text x="544" y="709" text-anchor="middle">Color &amp; text styles</text>
-    </g>
+    <use href="#spark" x="120" y="176"/>
+    <use href="#spark" x="856" y="286"/>
+    <use href="#spark" x="1846" y="286"/>
+    <use href="#spark" x="1002" y="150"/>
+    <use href="#spark" x="880" y="946"/>
+    <circle cx="800" cy="212" r="7" fill="#B3A2E5"/>
+    <circle cx="1846" cy="742" r="7" fill="#B3A2E5"/>
+    <circle cx="946" cy="880" r="7" fill="#F2C14E"/>
   </g>
 
-  <!-- ПРАВАЯ ЧАСТЬ: браузер → фрейм -->
+  <!-- ══ ЛЕВАЯ КОЛОНКА ══════════════════════════════════════════════ -->
   <g>
-    <!-- окно браузера -->
-    <g>
-      <rect x="1010" y="210" width="520" height="380" rx="18" fill="#171E3A" stroke="#2A3560" stroke-width="2"/>
-      <rect x="1010" y="210" width="520" height="56" rx="18" fill="#1C2547"/>
-      <rect x="1010" y="248" width="520" height="18" fill="#1C2547"/>
-      <circle cx="1044" cy="238" r="7" fill="#F76E6E"/>
-      <circle cx="1068" cy="238" r="7" fill="#F7C56E"/>
-      <circle cx="1092" cy="238" r="7" fill="#3FBF6F"/>
-      <rect x="1118" y="224" width="380" height="28" rx="14" fill="#0E1330"/>
-      <text x="1136" y="244" font-size="17" fill="#6E7A9E">https://any-website.com</text>
-      <!-- скелет страницы -->
-      <rect x="1038" y="292" width="464" height="96" rx="10" fill="url(#hero)" opacity="0.9"/>
-      <rect x="1038" y="404" width="146" height="76" rx="8" fill="#232D55"/>
-      <rect x="1197" y="404" width="146" height="76" rx="8" fill="#232D55"/>
-      <rect x="1356" y="404" width="146" height="76" rx="8" fill="#232D55"/>
-      <rect x="1038" y="496" width="300" height="16" rx="8" fill="#2E3A6B"/>
-      <rect x="1038" y="524" width="220" height="16" rx="8" fill="#2E3A6B" opacity="0.7"/>
+    <rect x="128" y="238" width="316" height="54" rx="27" fill="none" stroke="#D6C9BC" stroke-width="2.5"/>
+    <text x="286" y="273" text-anchor="middle" font-size="20" font-weight="700"
+          letter-spacing="3.4" fill="#B24413">FREE · OPEN SOURCE</text>
+
+    <text x="124" y="442" font-size="118" font-weight="800" letter-spacing="-3" fill="#1B1A18">Website</text>
+    <text x="124" y="566" font-size="118" font-weight="800" letter-spacing="-3" fill="#1B1A18">to Figma</text>
+
+    <text x="128" y="658" font-size="35" fill="#6F675F">Import any site into editable layers —</text>
+    <text x="128" y="710" font-size="35" fill="#6F675F">Auto Layout, real fonts, images and vectors</text>
+
+    <g font-size="24" font-weight="600" fill="#1B1A18">
+      <rect x="128" y="782" width="212" height="60" rx="30" fill="#FFFFFF" stroke="#E2DAD1" stroke-width="2"/>
+      <text x="234" y="820" text-anchor="middle">Auto Layout</text>
+      <rect x="356" y="782" width="196" height="60" rx="30" fill="#FFFFFF" stroke="#E2DAD1" stroke-width="2"/>
+      <text x="454" y="820" text-anchor="middle">Real fonts</text>
+      <rect x="568" y="782" width="230" height="60" rx="30" fill="#FFFFFF" stroke="#E2DAD1" stroke-width="2"/>
+      <text x="683" y="820" text-anchor="middle">Images &amp; SVG</text>
     </g>
 
-    <!-- стрелка -->
-    <g stroke="url(#accent)" stroke-width="12" stroke-linecap="round" fill="none">
-      <path d="M1240 632 C1240 700 1300 726 1368 726"/>
-      <path d="M1340 700 L1372 726 L1340 752"/>
-    </g>
+    <!-- сидящий кот на строке заголовка -->
+    <use href="#cat-sit" x="640" y="458"/>
 
-    <!-- фрейм Figma со слоями -->
-    <g>
-      <rect x="1408" y="620" width="360" height="252" rx="16" fill="#171E3A" stroke="#4E8EF7" stroke-width="2.5"/>
-      <text x="1430" y="654" font-size="17" font-weight="600" fill="#7FA9F9"># any-website · 1440</text>
-      <!-- список слоёв -->
-      <g font-size="17" fill="#C7D2EC">
-        <rect x="1430" y="672" width="316" height="36" rx="7" fill="#1E2850"/>
-        <rect x="1442" y="682" width="16" height="16" rx="3.5" fill="none" stroke="#7FA9F9" stroke-width="2"/>
-        <text x="1470" y="695">hero — Auto Layout ↓</text>
-        <rect x="1430" y="716" width="316" height="36" rx="7" fill="#1E2850" opacity="0.75"/>
-        <rect x="1442" y="726" width="16" height="16" rx="3.5" fill="none" stroke="#7FA9F9" stroke-width="2"/>
-        <text x="1470" y="739">cards — Auto Layout →</text>
-        <rect x="1430" y="760" width="316" height="36" rx="7" fill="#1E2850" opacity="0.55"/>
-        <text x="1447" y="783" font-weight="700" fill="#7FA9F9">T</text>
-        <text x="1470" y="783">heading text</text>
-        <rect x="1430" y="804" width="316" height="36" rx="7" fill="#1E2850" opacity="0.4"/>
-        <circle cx="1450" cy="822" r="8" fill="none" stroke="#7FA9F9" stroke-width="2"/>
-        <text x="1470" y="827">image.png</text>
-      </g>
-    </g>
+    <!-- кот-батон внизу слева + подпись от руки -->
+    <use href="#cat-loaf" x="132" y="892"/>
+    <text x="500" y="1012" font-family="'Chalkboard SE', 'Bradley Hand', cursive"
+          font-size="36" fill="#B24413">no more screenshots</text>
   </g>
+
+  <!-- ══ ПРАВАЯ КОЛОНКА ═════════════════════════════════════════════ -->
+
+  <!-- кот выглядывает из-за карточки сайта -->
+  <use href="#cat-peek" x="1392" y="70"/>
+  <path d="M1648 322 C1714 328 1740 284 1730 200" fill="none" stroke="#DE6B32"
+        stroke-width="26" stroke-linecap="round"/>
+
+  <!-- карточка «сайт» -->
+  <g>
+    <rect x="1000" y="330" width="720" height="300" rx="26" fill="#FFFFFF" stroke="#E2DAD1" stroke-width="2.5"/>
+    <circle cx="1042" cy="372" r="7" fill="#E2DAD1"/>
+    <circle cx="1066" cy="372" r="7" fill="#E2DAD1"/>
+    <circle cx="1090" cy="372" r="7" fill="#E2DAD1"/>
+    <rect x="1122" y="360" width="280" height="25" rx="12.5" fill="#EDE7E0"/>
+    <path d="M1000 404 H1720" stroke="#EFE8E1" stroke-width="2"/>
+    <rect x="1036" y="434" width="300" height="116" rx="16" fill="#EE8B5F"/>
+    <!-- котик на «герое» импортируемого сайта -->
+    <g transform="translate(1192 462) scale(0.56)">
+      <path d="M14 132 C14 96 26 62 46 40 L34 2 L82 30 Q100 24 118 30 L166 2 L154 40
+               C174 62 186 96 186 132 Z"
+            fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="72" cy="76" r="17" fill="#EE8B5F"/>
+      <circle cx="128" cy="76" r="17" fill="#EE8B5F"/>
+      <path d="M182 126 C214 132 226 112 220 82" fill="none" stroke="#FFFFFF"
+            stroke-width="13" stroke-linecap="round"/>
+    </g>
+    <rect x="1076" y="466" width="118" height="15" rx="7.5" fill="#FFFFFF" opacity=".9"/>
+    <rect x="1076" y="496" width="76" height="15" rx="7.5" fill="#FFFFFF" opacity=".55"/>
+    <rect x="1364" y="434" width="150" height="116" rx="16" fill="#EDE7E0"/>
+    <rect x="1542" y="434" width="150" height="116" rx="16" fill="#EDE7E0"/>
+    <rect x="1036" y="578" width="420" height="14" rx="7" fill="#EDE7E0"/>
+  </g>
+
+  <!-- след лап: сайт → слои -->
+  <g>
+    <use href="#paw" x="1030" y="660" transform="rotate(26 1030 660)"/>
+    <use href="#paw" x="1080" y="690" transform="rotate(26 1080 690)"/>
+    <use href="#paw" x="1130" y="720" transform="rotate(26 1130 720)"/>
+  </g>
+
+  <!-- карточка «слои в Figma» -->
+  <g>
+    <text x="1182" y="684" font-size="21" font-weight="600" fill="#B3A2E5">Home — 1440</text>
+    <rect x="1180" y="700" width="600" height="290" rx="26" fill="#FFFFFF" stroke="#E2DAD1" stroke-width="2.5"/>
+    <rect x="1216" y="742" width="16" height="16" rx="4" fill="#B3A2E5"/>
+    <rect x="1248" y="744" width="180" height="13" rx="6.5" fill="#EDE7E0"/>
+    <rect x="1240" y="788" width="16" height="16" rx="4" fill="#F2C14E"/>
+    <rect x="1272" y="790" width="230" height="13" rx="6.5" fill="#EDE7E0"/>
+    <rect x="1240" y="834" width="16" height="16" rx="4" fill="#EE8B5F"/>
+    <rect x="1272" y="836" width="150" height="13" rx="6.5" fill="#EDE7E0"/>
+    <rect x="1216" y="880" width="16" height="16" rx="4" fill="#B3A2E5"/>
+    <rect x="1248" y="882" width="200" height="13" rx="6.5" fill="#EDE7E0"/>
+  </g>
+
+  <!-- спящий кот на карточке слоёв -->
+  <use href="#cat-sleep" x="1520" y="878"/>
 </svg>

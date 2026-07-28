@@ -7,7 +7,7 @@ const { chromium } = require(path.join(__dirname, '..', 'server', 'node_modules'
 
 const ASSETS = [
   ['icon.svg', 'icon.png', 128, 128],
-  ['cover.svg', 'cover.png', 1920, 960],
+  ['cover.svg', 'cover.png', 1920, 1080],
 ];
 
 (async () => {

@@ -102,7 +102,8 @@ const DEFAULT_SERVER = 'https://ваш-адрес';
 
 1. Figma (desktop) → **Plugins → Development → ваш плагин → Publish…**
 2. Заполнить карточку текстами ниже. Картинки в `assets/`: `icon.png` (128×128),
-   `cover.png` (1920×960 — **проверьте, Figma просит 1920×1080**).
+   `cover.png` (1920×1080, как и просит Figma). Обе собираются из `.svg`
+   рядом — правьте исходник и перерисовывайте, а не подменяйте PNG.
 3. **Publisher profile** — один раз: имя и аватар.
 4. **Support contact** — почта.
 5. **Submit for review.** Ревью занимает от нескольких дней до пары недель.
