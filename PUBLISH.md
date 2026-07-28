@@ -81,16 +81,10 @@ HTTPS обязателен (Caddy или nginx + certbot): Figma не пусти
 
 ## Шаг 3. Адрес сервера в плагине
 
-В `plugin/ui.html`:
+**Сделано 2026-07-28.** В `plugin/ui.html` прописан рабочий облачный адрес:
 
 ```js
-const DEFAULT_SERVER = 'http://127.0.0.1:4511';
-```
-
-заменить на облачный адрес:
-
-```js
-const DEFAULT_SERVER = 'https://ваш-адрес';
+const DEFAULT_SERVER = 'https://render.anisimovalisaveta.com';
 ```
 
 Свой сервер пользователь пропишет в «Дополнительно» — там же, где включается режим

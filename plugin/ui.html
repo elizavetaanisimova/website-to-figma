@@ -565,9 +565,9 @@
 <script>
   const $ = (id) => document.getElementById(id);
 
-  // После деплоя сервера в облако замените на его адрес, например:
-  // const DEFAULT_SERVER = 'https://site-to-figma.fly.dev';
-  const DEFAULT_SERVER = 'http://127.0.0.1:4511';
+  // Облачный сервер по умолчанию — работает сразу после установки.
+  // Свой сервер (mac/install.command) вписывается в поле настроек: http://127.0.0.1:4511
+  const DEFAULT_SERVER = 'https://render.anisimovalisaveta.com';
   const TON_ADDRESS = 'UQBz8oG02Va5OnCUw5mZ7sIUhxcqqWrTwIDlMqqt8Ca0jWbL';
 
   // ---------- локализация ----------
@@ -1495,7 +1495,10 @@
   renderChips();
   updateLoginUI();
   ping();
-  setInterval(() => { if (!state.busy) ping(); }, 5000);
+  // Раз в 30 с, а не в 5: опрос нужен только для точки в шапке — перед импортом
+  // и по клику на плашку плагин пингует отдельно. На пятисекундном интервале
+  // тысяча открытых окон дала бы 200 запросов в секунду на облачный сервер.
+  setInterval(() => { if (!state.busy) ping(); }, 30000);
   $('server-pill').onclick = ping;
   parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
 </script>
