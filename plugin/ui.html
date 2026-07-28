@@ -134,6 +134,67 @@
   .url-wrap input { padding-left: 34px; }
   input:focus, select:focus { border-color: var(--g1); box-shadow: 0 0 0 3px var(--ring); background: var(--canvas); }
 
+  /* ---------- поиск страниц ---------- */
+  .url-row { display: flex; gap: 8px; align-items: stretch; }
+  .url-row .url-wrap { flex: 1; min-width: 0; }
+  .find-btn {
+    flex: none; padding: 0 13px; border-radius: 13px;
+    border: 1px solid var(--hair); background: transparent; color: var(--ink2);
+    font: inherit; font-size: 11px; font-weight: 550; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    transition: all .13s;
+  }
+  .find-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+  .find-btn:disabled { opacity: .45; cursor: default; }
+  .find-btn svg { flex: none; }
+
+  #pages { display: none; }
+  .pages-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .pages-head .field-label { margin: 0; flex: 1; }
+  .link-btn {
+    border: 0; background: transparent; color: var(--g1);
+    font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer;
+    padding: 2px 4px; border-radius: 6px;
+  }
+  .link-btn:hover { background: var(--fill); }
+  .pages-filter { margin-bottom: 8px; }
+  .pages-filter input { padding: 8px 12px; border-radius: 11px; font-size: 11px; }
+  .pages-list {
+    max-height: 220px; overflow-y: auto; overscroll-behavior: contain;
+    border: 1px solid var(--hair); border-radius: 13px; background: var(--surface);
+  }
+  .page-row {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--hair);
+  }
+  .page-row:last-child { border-bottom: 0; }
+  .page-row:hover { background: var(--fill); }
+  .page-row .box {
+    flex: none; width: 15px; height: 15px; border-radius: 5px;
+    border: 1.5px solid var(--hair); background: var(--canvas);
+    display: flex; align-items: center; justify-content: center;
+    transition: all .12s;
+  }
+  .page-row .box svg { opacity: 0; color: var(--canvas); }
+  .page-row.on .box { background: var(--ink); border-color: var(--ink); }
+  .page-row.on .box svg { opacity: 1; }
+  .page-row .txt { flex: 1; min-width: 0; }
+  .page-row .n {
+    font-size: 11px; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .page-row .p {
+    font-size: 9.5px; color: var(--ink2); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pages-foot {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px; font-size: 10px; color: var(--ink2);
+  }
+  .pages-foot .spacer { flex: 1; }
+  .pages-warn { color: var(--red); }
+  .pages-empty { padding: 14px; text-align: center; color: var(--ink2); font-size: 10.5px; }
+
   /* ---------- чипы устройств ---------- */
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -309,11 +370,36 @@
 
 <div class="card">
   <div class="field-label" data-i18n="urlLabel"></div>
-  <div class="url-wrap">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
-    </svg>
-    <input type="text" id="url" placeholder="https://example.com" spellcheck="false">
+  <div class="url-row">
+    <div class="url-wrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+        <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
+      </svg>
+      <input type="text" id="url" placeholder="https://example.com" spellcheck="false">
+    </div>
+    <button class="find-btn" id="find" title="">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+      </svg>
+      <span id="find-label"></span>
+    </button>
+  </div>
+</div>
+
+<div class="card" id="pages">
+  <div class="pages-head">
+    <div class="field-label" id="pages-title"></div>
+    <button class="link-btn" id="pages-all"></button>
+    <button class="link-btn" id="pages-none"></button>
+  </div>
+  <div class="pages-filter">
+    <input type="text" id="pages-search" spellcheck="false">
+  </div>
+  <div class="pages-list" id="pages-list"></div>
+  <div class="pages-foot">
+    <span id="pages-count"></span>
+    <span class="spacer"></span>
+    <button class="link-btn" id="pages-hide"></button>
   </div>
 </div>
 
@@ -438,6 +524,22 @@
       tagline: 'Any website into editable layers',
       serverOn: 'Server online', serverCloud: 'Cloud server', serverOff: 'Server offline',
       urlLabel: 'Website link',
+      findBtn: 'Pages', findTitle: 'Find all pages of this site',
+      findStage: 'Looking for pages — reading the sitemap…',
+      findStageCrawl: 'No sitemap — following links, this takes longer…',
+      pagesTitle: (n) => 'Pages found: ' + n,
+      pagesAll: 'All', pagesNone: 'None', pagesHide: 'Hide list',
+      pagesSearch: 'Filter by name or address',
+      pagesSelected: (n) => n === 0 ? 'Nothing selected' : 'Selected: ' + n,
+      pagesEstimate: (n) => ' · about ' + n,
+      pagesTruncated: (n, tot) => 'Showing first ' + n + ' of ' + tot,
+      pagesFromCrawl: 'found by following links',
+      pagesNothing: 'Nothing matches the filter',
+      errNoPages: 'Select at least one page.',
+      minutes: (n) => n < 1 ? 'under a minute' : n === 1 ? '1 minute' : n + ' minutes',
+      stagePage: (i, n, name) => 'Page ' + i + ' of ' + n + ': ' + name,
+      lines_pages: (n) => 'Pages imported: ' + n,
+      lines_pagesFailed: (n) => 'Pages skipped (did not open): ' + n,
       devices: 'Devices',
       desktop: 'Desktop', laptop: 'Laptop', tablet: 'Tablet', phone: 'Phone', custom: 'Custom',
       theme: 'Website theme', light: 'Light', dark: 'Dark', both: 'Both',
@@ -481,6 +583,22 @@
       tagline: 'Любой сайт — в редактируемые слои',
       serverOn: 'Сервер работает', serverCloud: 'Облачный сервер', serverOff: 'Сервер недоступен',
       urlLabel: 'Ссылка на сайт',
+      findBtn: 'Страницы', findTitle: 'Найти все страницы сайта',
+      findStage: 'Ищу страницы — читаю карту сайта…',
+      findStageCrawl: 'Карты сайта нет — иду по ссылкам, это дольше…',
+      pagesTitle: (n) => 'Найдено страниц: ' + n,
+      pagesAll: 'Все', pagesNone: 'Снять', pagesHide: 'Скрыть список',
+      pagesSearch: 'Фильтр по названию или адресу',
+      pagesSelected: (n) => n === 0 ? 'Ничего не выбрано' : 'Выбрано: ' + n,
+      pagesEstimate: (n) => ' · примерно ' + n,
+      pagesTruncated: (n, tot) => 'Показаны первые ' + n + ' из ' + tot,
+      pagesFromCrawl: 'найдено по ссылкам',
+      pagesNothing: 'Под фильтр ничего не подходит',
+      errNoPages: 'Выберите хотя бы одну страницу.',
+      minutes: (n) => n < 1 ? 'меньше минуты' : n === 1 ? '1 минута' : n < 5 ? n + ' минуты' : n + ' минут',
+      stagePage: (i, n, name) => 'Страница ' + i + ' из ' + n + ': ' + name,
+      lines_pages: (n) => 'Страниц импортировано: ' + n,
+      lines_pagesFailed: (n) => 'Страниц пропущено (не открылись): ' + n,
       devices: 'Устройства',
       desktop: 'Десктоп', laptop: 'Ноутбук', tablet: 'Планшет', phone: 'Телефон', custom: 'Своя',
       theme: 'Тема сайта', light: 'Светлая', dark: 'Тёмная', both: 'Обе',
@@ -538,6 +656,10 @@
     pendingBuild: null,
     caps: null,
     langSetting: 'auto', // auto | en | ru
+    pages: [],           // [{ url, path, title }] — что нашёл /discover
+    pageSel: [],         // выбранные адреса
+    pagesMeta: null,     // { source, total, truncated }
+    pagesFilter: '',
   };
 
   function detectLang() {
@@ -556,9 +678,16 @@
     $('don-ton').textContent = t('donBtn');
     $('cancel').textContent = t('cancelBtn');
     $('session-capture').textContent = t('captureBtn');
+    $('find-label').textContent = t('findBtn');
+    $('find').title = t('findTitle');
+    $('pages-all').textContent = t('pagesAll');
+    $('pages-none').textContent = t('pagesNone');
+    $('pages-hide').textContent = t('pagesHide');
+    $('pages-search').placeholder = t('pagesSearch');
     updateLoginUI();
     applyCaps();
     renderHistory();
+    renderPages();
   }
 
   // ---------- элементы управления ----------
@@ -836,6 +965,146 @@
     return out;
   }
 
+  // ---------- список страниц сайта ----------
+  const CHECK_SVG = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+
+  function filteredPages() {
+    const q = state.pagesFilter.trim().toLowerCase();
+    if (!q) return state.pages;
+    return state.pages.filter(
+      (p) => p.title.toLowerCase().indexOf(q) >= 0 || p.path.toLowerCase().indexOf(q) >= 0
+    );
+  }
+
+  // сколько примерно займёт импорт выбранного
+  function estimateMinutes(pageCount) {
+    const schemes = state.theme === 'both' ? 2 : 1;
+    const variants = Math.max(1, pageCount) * Math.max(1, selectedWidths().length) * schemes;
+    return Math.round((variants * 25) / 60);
+  }
+
+  function renderPages() {
+    const card = $('pages');
+    if (!state.pages.length) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+    $('pages-title').textContent = t('pagesTitle', state.pages.length);
+
+    const list = $('pages-list');
+    list.innerHTML = '';
+    const shown = filteredPages();
+
+    if (!shown.length) {
+      const empty = document.createElement('div');
+      empty.className = 'pages-empty';
+      empty.textContent = t('pagesNothing');
+      list.appendChild(empty);
+    }
+
+    for (const p of shown) {
+      const row = document.createElement('div');
+      row.className = 'page-row' + (state.pageSel.indexOf(p.url) >= 0 ? ' on' : '');
+
+      const box = document.createElement('div');
+      box.className = 'box';
+      box.innerHTML = CHECK_SVG;
+      row.appendChild(box);
+
+      const txt = document.createElement('div');
+      txt.className = 'txt';
+      const n = document.createElement('div');
+      n.className = 'n';
+      n.textContent = p.title;
+      const pa = document.createElement('div');
+      pa.className = 'p';
+      pa.textContent = p.path;
+      txt.appendChild(n);
+      txt.appendChild(pa);
+      row.appendChild(txt);
+
+      row.onclick = () => {
+        const i = state.pageSel.indexOf(p.url);
+        if (i >= 0) state.pageSel.splice(i, 1);
+        else state.pageSel.push(p.url);
+        row.classList.toggle('on', i < 0);
+        renderPagesFoot();
+      };
+      list.appendChild(row);
+    }
+    renderPagesFoot();
+  }
+
+  function renderPagesFoot() {
+    const n = state.pageSel.length;
+    let text = t('pagesSelected', n);
+    if (n > 0) text += t('pagesEstimate', t('minutes', estimateMinutes(n)));
+    $('pages-count').textContent = text;
+    $('pages-count').className = '';
+
+    const meta = state.pagesMeta;
+    if (meta && meta.truncated) {
+      $('pages-count').textContent = text + ' · ' + t('pagesTruncated', state.pages.length, meta.total);
+    }
+  }
+
+  $('pages-all').onclick = () => {
+    const shown = filteredPages();
+    for (const p of shown) if (state.pageSel.indexOf(p.url) < 0) state.pageSel.push(p.url);
+    renderPages();
+  };
+  $('pages-none').onclick = () => {
+    const shown = filteredPages().map((p) => p.url);
+    state.pageSel = state.pageSel.filter((u) => shown.indexOf(u) < 0);
+    renderPages();
+  };
+  $('pages-hide').onclick = () => {
+    state.pages = [];
+    state.pageSel = [];
+    state.pagesMeta = null;
+    state.pagesFilter = '';
+    $('pages-search').value = '';
+    renderPages();
+  };
+  $('pages-search').oninput = () => {
+    state.pagesFilter = $('pages-search').value;
+    renderPages();
+  };
+
+  $('find').onclick = async () => {
+    if (state.busy) return;
+    const url = $('url').value.trim();
+    if (!url) { showError(t('errNoUrl')); return; }
+
+    hideCards();
+    setBusy(true);
+    $('find').disabled = true;
+    setBar(0);
+    setStage(t('findStage'));
+    // карта сайта обычно отвечает за секунды; если дольше — почти наверняка идёт обход
+    const crawlHint = setTimeout(() => { if (state.busy) setStage(t('findStageCrawl')); }, 12000);
+
+    try {
+      if (!(await ping())) throw new Error(t('serverHelp'));
+      const r = await fetchSnapshot({ url, maxPages: 200 }, '/discover');
+      state.pages = r.pages || [];
+      state.pagesMeta = { source: r.source, total: r.total, truncated: r.truncated };
+      state.pagesFilter = '';
+      $('pages-search').value = '';
+      // по умолчанию отмечаем только стартовую — остальное пусть выберут сами
+      state.pageSel = state.pages.length ? [state.pages[0].url] : [];
+      $('progress').style.display = 'none';
+      renderPages();
+    } catch (e) {
+      showError(state.cancelled ? t('errCancelled') : String(e.message || e));
+    } finally {
+      clearTimeout(crawlHint);
+      setBusy(false);
+      $('find').disabled = false;
+    }
+  };
+
   // ---------- прогресс и статусы ----------
   function setStage(text) {
     $('progress').style.display = 'block';
@@ -873,6 +1142,7 @@
   function setBusy(b) {
     state.busy = b;
     $('go').disabled = b;
+    $('find').disabled = b;
     $('session-capture').disabled = b;
     $('cancel').style.display = b ? 'block' : 'none';
     if (!b) { state.cancelled = false; state.fetchCtrl = null; }
@@ -920,22 +1190,37 @@
     setBar(0);
     const batchId = 'b' + Date.now() + Math.random().toString(36).slice(2, 6);
     const totals = { created: 0, autoLayout: 0, styles: 0, imagesSkipped: 0, svgFailed: 0 };
+    const pagesDone = {};
+    let failed = 0;
     try {
       if (!(await ping())) throw new Error(t('serverHelp'));
       for (let i = 0; i < variants.length; i++) {
         if (state.cancelled) break;
         const v = variants[i];
         const prefix = variants.length > 1 ? (i + 1) + '/' + variants.length + ' · ' : '';
-        setStage(prefix + t('stageOpen', v.width, v.scheme ? t(v.scheme).toLowerCase() : ''));
+        setStage(
+          v.pageName
+            ? prefix + t('stagePage', v.pageIndex, v.pageTotal, v.pageName)
+            : prefix + t('stageOpen', v.width, v.scheme ? t(v.scheme).toLowerCase() : '')
+        );
         setBar(i / variants.length);
 
-        const data = await fetchSnapshot({
-          ...extraBody,
-          width: v.width,
-          colorScheme: v.scheme,
-          screenshot: state.screenshot,
-          maxHeight: Number($('maxh').value),
-        }, endpoint);
+        let data;
+        try {
+          data = await fetchSnapshot({
+            ...extraBody,
+            ...(v.body || {}),
+            width: v.width,
+            colorScheme: v.scheme,
+            screenshot: state.screenshot,
+            maxHeight: Number($('maxh').value),
+          }, endpoint);
+        } catch (e) {
+          // одна недоступная страница не должна ронять весь пакет
+          if (state.cancelled || variants.length === 1) throw e;
+          failed++;
+          continue;
+        }
         if (state.cancelled) break;
 
         const imgN = Object.keys(data.imageData || {}).length;
@@ -948,12 +1233,14 @@
         const res = await buildInFigma(data, {
           batchId,
           label,
+          newRow: v.newRow === true,
           autoLayout: state.autoLayout,
           makeStyles: state.styles && i === 0,
           screenshot: state.screenshot,
           lang: detectLang(),
           screenshotName: t('screenshotName'),
         });
+        if (v.pageUrl) pagesDone[v.pageUrl] = true;
         totals.created += res.created;
         totals.autoLayout += res.autoLayout;
         totals.styles += res.styles;
@@ -964,6 +1251,9 @@
         showError(t('errCancelled'));
       } else {
         const lines = [t('lines_layers', totals.created, variants.length)];
+        const pageCount = Object.keys(pagesDone).length;
+        if (pageCount > 1) lines.unshift(t('lines_pages', pageCount));
+        if (failed) lines.push(t('lines_pagesFailed', failed));
         if (state.autoLayout) lines.push(t('lines_al', totals.autoLayout));
         if (totals.styles) lines.push(t('lines_styles', totals.styles));
         if (totals.imagesSkipped) lines.push(t('lines_imgSkipped', totals.imagesSkipped));
@@ -1007,18 +1297,50 @@
     if (!widths.length) { showError(t('errNoDevice')); return; }
     const schemes = state.theme === 'both' ? ['light', 'dark'] : [state.theme];
     const host = url.replace(/^https?:\/\//, '').split('/')[0];
+
+    // Если список страниц открыт — импортируем выбранные, иначе одну ссылку из поля.
+    let targets;
+    if (state.pages.length) {
+      if (!state.pageSel.length) { showError(t('errNoPages')); return; }
+      // порядок как в списке, а не как кликали
+      targets = state.pages.filter((p) => state.pageSel.indexOf(p.url) >= 0).map((p) => ({
+        url: p.url,
+        name: p.title || p.path,
+        path: p.path,
+      }));
+    } else {
+      targets = [{ url, name: host, path: '' }];
+    }
+
     const variants = [];
-    for (const w of widths) {
-      for (const s of schemes) {
-        variants.push({
-          width: w,
-          scheme: s,
-          label: host + ' · ' + w + (schemes.length > 1 ? ' · ' + t(s).toLowerCase() : ''),
-        });
+    for (let pi = 0; pi < targets.length; pi++) {
+      const target = targets[pi];
+      let firstOfPage = true;
+      for (const w of widths) {
+        for (const s of schemes) {
+          const base = targets.length > 1 ? target.name : host;
+          variants.push({
+            width: w,
+            scheme: s,
+            body: { url: target.url },
+            pageUrl: target.url,
+            pageName: targets.length > 1 ? target.name : '',
+            pageIndex: pi + 1,
+            pageTotal: targets.length,
+            // каждая страница — своя строка фреймов в Figma
+            newRow: firstOfPage && pi > 0,
+            label: base + ' · ' + w + (schemes.length > 1 ? ' · ' + t(s).toLowerCase() : ''),
+          });
+          firstOfPage = false;
+        }
       }
     }
-    const meta = widths.join('/') + (state.theme === 'both' ? ' · ' + t('themes2') : '');
-    await runVariants(variants, '/snapshot', { url }, url, meta);
+
+    const meta =
+      (targets.length > 1 ? targets.length + ' × ' : '') +
+      widths.join('/') +
+      (state.theme === 'both' ? ' · ' + t('themes2') : '');
+    await runVariants(variants, '/snapshot', {}, url, meta);
   };
 
   $('session-capture').onclick = async () => {

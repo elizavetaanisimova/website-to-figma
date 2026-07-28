@@ -518,7 +518,8 @@ const STYLE_FOLDERS = {
   ru: { colors: 'Цвета', text: 'Текст' },
 };
 
-const batchState = { id: null, nextX: 0, y: 0, frames: [] };
+// Раскладка пакета: варианты одной страницы идут вправо, новая страница — новой строкой.
+const batchState = { id: null, startX: 0, nextX: 0, y: 0, rowMaxH: 0, frames: [] };
 
 async function build(data, opts) {
   const stats = { images: 0, imagesSkipped: 0, svgFailed: 0, iconSkipped: 0, failed: 0, autoLayout: 0, styles: 0 };
@@ -549,9 +550,16 @@ async function build(data, opts) {
 
   if (opts.batchId !== batchState.id) {
     batchState.id = opts.batchId;
-    batchState.nextX = Math.round(figma.viewport.center.x - data.pageWidth / 2);
+    batchState.startX = Math.round(figma.viewport.center.x - data.pageWidth / 2);
+    batchState.nextX = batchState.startX;
     batchState.y = Math.round(figma.viewport.center.y - Math.min(data.pageHeight, 2000) / 2);
+    batchState.rowMaxH = 0;
     batchState.frames = [];
+  } else if (opts.newRow) {
+    // следующая страница — под предыдущей, с отступом
+    batchState.y += batchState.rowMaxH + 400;
+    batchState.nextX = batchState.startX;
+    batchState.rowMaxH = 0;
   }
 
   let rootFrame = null;
@@ -561,6 +569,7 @@ async function build(data, opts) {
     rootFrame.x = batchState.nextX;
     rootFrame.y = batchState.y;
     batchState.nextX += data.pageWidth + 160;
+    batchState.rowMaxH = Math.max(batchState.rowMaxH, rootFrame.height);
     batchState.frames.push(rootFrame);
 
     if (opts.screenshot && data.screenshotSlices && data.screenshotSlices.length) {
@@ -568,6 +577,7 @@ async function build(data, opts) {
       shot.x = batchState.nextX;
       shot.y = batchState.y;
       batchState.nextX += data.pageWidth + 160;
+      batchState.rowMaxH = Math.max(batchState.rowMaxH, shot.height);
       batchState.frames.push(shot);
     }
 

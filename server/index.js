@@ -6,6 +6,7 @@ const net = require('net');
 const dns = require('dns').promises;
 const { chromium } = require('playwright');
 const extractPage = require('./extract');
+const { discoverPages } = require('./discover');
 
 // CLOUD=1 — режим публичного облачного сервера: слушаем 0.0.0.0,
 // включаем лимиты, SSRF-защиту и отключаем интерактивные сессии.
@@ -94,6 +95,10 @@ const MSG = {
   'busy': ['The server is busy right now, try again in a minute', 'Сервер сейчас перегружен, попробуйте через минуту'],
   'timeout': ['Timeout: the operation took longer than {n} seconds', 'Таймаут: операция шла дольше {n} секунд'],
   'bad-json': ['Invalid JSON', 'Некорректный JSON'],
+  'no-pages': [
+    'No pages found on this site. Try importing the address directly.',
+    'Не удалось найти страницы этого сайта. Попробуйте импортировать адрес напрямую.',
+  ],
   'session-gone': [
     'Session not found — the browser window was closed. Open the browser again.',
     'Сессия не найдена — окно браузера было закрыто. Откройте браузер заново.',
@@ -358,6 +363,23 @@ async function snapshot(params) {
   }
 }
 
+// ---------- поиск страниц сайта ----------
+
+async function discover(params) {
+  const lang = pickLang(params);
+  const result = await discoverPages(params, {
+    UA,
+    clamp,
+    assertPublicUrl,
+    getHeadlessBrowser,
+    lang,
+    T,
+    CLOUD,
+  });
+  if (!result.pages.length) throw new Error(T('no-pages', lang));
+  return result;
+}
+
 // ---------- интерактивные сессии (сайты за логином) ----------
 
 const sessions = new Map(); // id -> { browser, context, page, timer }
@@ -494,7 +516,7 @@ const server = http.createServer((req, res) => {
       version: 3,
       port: PORT,
       cloud: CLOUD,
-      capabilities: { sessions: !CLOUD, screenshot: true, autoLayout: true },
+      capabilities: { sessions: !CLOUD, screenshot: true, autoLayout: true, discover: true },
       sessions: sessions.size,
     });
   }
@@ -504,6 +526,14 @@ const server = http.createServer((req, res) => {
       const lang = pickLang(p);
       checkRate(clientIp(r), lang);
       return withSlot(() => snapshot(p), lang);
+    });
+  }
+
+  if (req.method === 'POST' && req.url === '/discover') {
+    return readBody(req, res, (p, r) => {
+      const lang = pickLang(p);
+      checkRate(clientIp(r), lang);
+      return withSlot(() => discover(p), lang);
     });
   }
 
