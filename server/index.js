@@ -14,6 +14,9 @@ const CLOUD = process.env.CLOUD === '1' || process.env.CLOUD === 'true';
 const PORT = Number(process.env.PORT || 4511);
 const HOST = process.env.HOST || (CLOUD ? '0.0.0.0' : '127.0.0.1');
 const RATE_LIMIT = Number(process.env.RATE_LIMIT || 20); // импортов в час с одного IP (только CLOUD)
+// Секретный токен: запрос с ним не считается лимитом (личный обход для владельца).
+// Пусто = обход выключен. Задаётся в окружении сервера, вводится в плагине.
+const RATE_BYPASS = process.env.RATE_BYPASS || '';
 const MAX_CONCURRENT = Number(process.env.MAX_CONCURRENT || 2);
 const MAX_QUEUE = Number(process.env.MAX_QUEUE || 10);
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -80,46 +83,86 @@ function clamp(v, min, max, dflt) {
   return Math.min(max, Math.max(min, Math.round(n)));
 }
 
-// ---------- локализация ошибок (en по умолчанию, ru по параметру lang) ----------
+// ---------- локализация ошибок (en по умолчанию, ru и es по параметру lang) ----------
+
+const LANGS = ['en', 'ru', 'es'];
 
 const MSG = {
-  'no-url': ['Missing url', 'Не указан url'],
-  'open-fail': ['Could not open the page: ', 'Не удалось открыть страницу: '],
-  'http-only': ['Only http/https links are allowed', 'Разрешены только http/https ссылки'],
-  'blocked': [
-    'The cloud server cannot reach this address. Run the renderer on your own machine to import it.',
-    'Облачный сервер не достаёт до этого адреса. Чтобы импортировать, запустите сервер у себя.',
-  ],
-  'no-host': ['No such site: ', 'Такого сайта нет: '],
-  'rate': [
-    'Limit reached: {n} imports an hour from one address. Try later, or run the renderer yourself.',
-    'Лимит: {n} импортов в час с одного адреса. Попробуйте позже или запустите сервер у себя.',
-  ],
-  'busy': ['Too many imports at once — try again in a minute', 'Слишком много импортов разом — попробуйте через минуту'],
-  'timeout': ['Gave up after {n} seconds', 'Не уложились в {n} секунд'],
-  'bad-json': ['Invalid JSON', 'Некорректный JSON'],
-  'no-pages': [
-    'Found no pages on this site. Import the address directly instead.',
-    'Страниц у этого сайта не нашлось. Импортируйте адрес напрямую.',
-  ],
-  'session-gone': [
-    'The browser window was closed. Open it again.',
-    'Окно браузера закрыли. Откройте его заново.',
-  ],
-  'tabs-closed': ['Every tab is closed. Open the browser again.', 'Все вкладки закрыты. Откройте браузер заново.'],
-  'session-cloud': [
-    'A cloud server cannot open a browser on your computer, so this mode needs the renderer running on your machine. Start it, then put its address into Advanced.',
-    'Облачный сервер не может открыть браузер на вашем компьютере — для этого режима нужен свой. Запустите его и впишите адрес в «Дополнительно».',
-  ],
+  'no-url': {
+    en: 'Missing url',
+    ru: 'Не указан url',
+    es: 'Falta la url',
+  },
+  'open-fail': {
+    en: 'Could not open the page: ',
+    ru: 'Не удалось открыть страницу: ',
+    es: 'No se pudo abrir la página: ',
+  },
+  'http-only': {
+    en: 'Only http/https links are allowed',
+    ru: 'Разрешены только http/https ссылки',
+    es: 'Solo se admiten enlaces http/https',
+  },
+  'blocked': {
+    en: 'The cloud server cannot reach this address. Run the renderer on your own machine to import it.',
+    ru: 'Облачный сервер не достаёт до этого адреса. Чтобы импортировать, запустите сервер у себя.',
+    es: 'El servidor en la nube no llega a esta dirección. Para importarla, arranca el servidor en tu equipo.',
+  },
+  'no-host': {
+    en: 'No such site: ',
+    ru: 'Такого сайта нет: ',
+    es: 'No existe ese sitio: ',
+  },
+  'rate': {
+    en: 'Limit reached: {n} imports an hour from one address. Try later, or run the renderer yourself.',
+    ru: 'Лимит: {n} импортов в час с одного адреса. Попробуйте позже или запустите сервер у себя.',
+    es: 'Límite alcanzado: {n} importaciones por hora desde una dirección. Inténtalo más tarde o arranca el servidor tú.',
+  },
+  'busy': {
+    en: 'Too many imports at once — try again in a minute',
+    ru: 'Слишком много импортов разом — попробуйте через минуту',
+    es: 'Demasiadas importaciones a la vez: inténtalo dentro de un minuto',
+  },
+  'timeout': {
+    en: 'Gave up after {n} seconds',
+    ru: 'Не уложились в {n} секунд',
+    es: 'Se agotó el tiempo tras {n} segundos',
+  },
+  'bad-json': {
+    en: 'Invalid JSON',
+    ru: 'Некорректный JSON',
+    es: 'JSON no válido',
+  },
+  'no-pages': {
+    en: 'Found no pages on this site. Import the address directly instead.',
+    ru: 'Страниц у этого сайта не нашлось. Импортируйте адрес напрямую.',
+    es: 'No se encontraron páginas en este sitio. Importa la dirección directamente.',
+  },
+  'session-gone': {
+    en: 'The browser window was closed. Open it again.',
+    ru: 'Окно браузера закрыли. Откройте его заново.',
+    es: 'Se cerró la ventana del navegador. Ábrela de nuevo.',
+  },
+  'tabs-closed': {
+    en: 'Every tab is closed. Open the browser again.',
+    ru: 'Все вкладки закрыты. Откройте браузер заново.',
+    es: 'No queda ninguna pestaña abierta. Abre el navegador de nuevo.',
+  },
+  'session-cloud': {
+    en: 'A cloud server cannot open a browser on your computer, so this mode needs the renderer running on your machine. Start it, then put its address into Advanced.',
+    ru: 'Облачный сервер не может открыть браузер на вашем компьютере — для этого режима нужен свой. Запустите его и впишите адрес в «Дополнительно».',
+    es: 'Un servidor en la nube no puede abrir un navegador en tu ordenador: este modo necesita el servidor en tu equipo. Arráncalo y pon su dirección en «Avanzado».',
+  },
 };
 
 function pickLang(params) {
-  return params && params.lang === 'ru' ? 'ru' : 'en';
+  const lang = params && params.lang;
+  return LANGS.indexOf(lang) >= 0 ? lang : 'en';
 }
 
 function T(key, lang, extra) {
-  const pair = MSG[key] || [key, key];
-  let s = lang === 'ru' ? pair[1] : pair[0];
+  const row = MSG[key];
+  let s = row ? row[LANGS.indexOf(lang) >= 0 ? lang : 'en'] : key;
   if (extra !== undefined) {
     s = s.indexOf('{n}') >= 0 ? s.replace('{n}', String(extra)) : s + extra;
   }
@@ -171,8 +214,10 @@ async function assertPublicUrl(url, lang) {
 
 // лимит запросов на IP (только в облаке)
 const rateMap = new Map();
-function checkRate(ip, lang) {
+function checkRate(ip, lang, token) {
   if (!CLOUD) return;
+  // Личный обход: верный токен снимает лимит с любого IP/сети.
+  if (RATE_BYPASS && typeof token === 'string' && token === RATE_BYPASS) return;
   const now = Date.now();
   let e = rateMap.get(ip);
   if (!e || now > e.resetAt) {
@@ -527,7 +572,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/snapshot') {
     return readBody(req, res, (p, r) => {
       const lang = pickLang(p);
-      checkRate(clientIp(r), lang);
+      checkRate(clientIp(r), lang, p.bypass);
       return withSlot(() => snapshot(p), lang);
     });
   }
@@ -535,7 +580,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/discover') {
     return readBody(req, res, (p, r) => {
       const lang = pickLang(p);
-      checkRate(clientIp(r), lang);
+      checkRate(clientIp(r), lang, p.bypass);
       return withSlot(() => discover(p), lang);
     });
   }
@@ -563,6 +608,6 @@ server.listen(PORT, HOST, () => {
   console.log('  http://' + (HOST === '0.0.0.0' ? '0.0.0.0' : '127.0.0.1') + ':' + PORT);
   console.log('');
   if (!CLOUD) console.log('  Leave this window open and start the plugin in Figma.');
-  else console.log('  Limits: ' + RATE_LIMIT + ' imports/hour per IP, ' + MAX_CONCURRENT + ' at a time.');
+  else console.log('  Limits: ' + RATE_LIMIT + ' imports/hour per IP, ' + MAX_CONCURRENT + ' at a time.' + (RATE_BYPASS ? ' Bypass token: on.' : ''));
   console.log('');
 });

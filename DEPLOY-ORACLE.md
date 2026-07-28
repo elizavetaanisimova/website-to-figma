@@ -103,5 +103,6 @@ https://ВАШ-ДОМЕН.duckdns.org/health
 | Обновить до свежего кода | `cd ~/website-to-figma && git pull && cd deploy && sudo docker compose up -d --build` |
 | Перезапустить | `cd ~/website-to-figma/deploy && sudo docker compose restart` |
 | Поменять лимиты | отредактировать `deploy/docker-compose.yml` (RATE_LIMIT, MAX_CONCURRENT) и перезапустить |
+| Личный обход лимита | задать `RATE_BYPASS` (секрет) в `deploy/docker-compose.yml`, перезапустить и вписать тот же секрет в плагине: Дополнительно → «Токен доступа» |
 
 Контейнеры стартуют сами после перезагрузки виртуалки (`restart: unless-stopped`).
