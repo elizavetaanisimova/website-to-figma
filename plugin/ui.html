@@ -430,7 +430,9 @@
 
   /* ---------- прогресс ---------- */
   #progress { display: none; margin-top: 16px; }
-  #stage { font-size: 11px; color: var(--ink2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  /* Отступ большой не случайно: кот встаёт на полосу и поднимается над ней
+     ~на 34px — этот зазор даёт ему воздух до текста этапа сверху. */
+  #stage { font-size: 11px; color: var(--ink2); margin-bottom: 44px; display: flex; align-items: center; gap: 8px; }
   .spinner {
     width: 12px; height: 12px; flex: none;
     border: 2px solid var(--hair); border-top-color: var(--coral);
