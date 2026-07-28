@@ -455,16 +455,6 @@
     pointer-events: none;
   }
   #runner img { display: block; width: 30px; height: auto; }
-  /* Фаза без известного процента (загрузка страниц): заливка-сегмент едет
-     по полосе в цикле, кот идёт вместе с ней. */
-  #bar.loading #fill {
-    width: 42%;
-    animation: crawl 1.25s ease-in-out infinite;
-  }
-  @keyframes crawl {
-    0%   { margin-left: -46%; }
-    100% { margin-left: 100%; }
-  }
 
   /* ---------- результат / ошибки ---------- */
   #done-card, #err-card { display: none; gap: 10px; align-items: flex-start; }
@@ -1843,18 +1833,29 @@
     $('stage-text').textContent = text;
     if (wasHidden) requestAnimationFrame(() => p.scrollIntoView({ block: 'nearest' }));
   }
-  function setBar(p) {
-    // p == null — процент неизвестен: бегущий сегмент, кот идёт по полосе
-    if (p == null) {
-      $('fill').style.width = '';
-      $('bar').classList.add('loading');
-      $('bar').removeAttribute('aria-valuenow');
-      return;
-    }
-    $('bar').classList.remove('loading');
-    const pct = Math.round(Math.max(0, Math.min(1, p)) * 100);
+  // Прогресс полосы. Настоящего процента для сетевых фаз (поиск страниц,
+  // рендер снапшота) сервер не даёт — там плавный «докат» к 90% с замедлением;
+  // фазы с реальным процентом (сборка) двигают полосу дальше. Всегда только
+  // вперёд и в пределах поля — без петли и без выезда за край. Кот сидит на
+  // переднем крае #fill, поэтому едет вместе с полосой сам.
+  let barShown = 0, barTimer = null;
+  function paintBar(v) {
+    barShown = Math.max(0, Math.min(1, v));
+    const pct = Math.round(barShown * 100);
     $('fill').style.width = pct + '%';
     $('bar').setAttribute('aria-valuenow', String(pct));
+  }
+  function stopTrickle() { if (barTimer) { clearInterval(barTimer); barTimer = null; } }
+  function resetBar() { stopTrickle(); paintBar(0); }
+  function setBar(p) {
+    if (p == null) {                 // процент неизвестен — плавный докат к 90%
+      if (barTimer) return;
+      if (barShown < 0.05) paintBar(0.05);
+      barTimer = setInterval(() => paintBar(barShown + (0.9 - barShown) * 0.08), 220);
+      return;
+    }
+    stopTrickle();                   // пришёл настоящий процент — двигаем, но только вперёд
+    paintBar(Math.max(barShown, Math.max(0, Math.min(1, p))));
   }
   function hideCards() {
     $('done-card').style.display = 'none';
@@ -1900,7 +1901,8 @@
     $('find').disabled = b;
     $('session-capture').disabled = b;
     $('cancel').style.display = b ? 'block' : 'none';
-    if (!b) { state.cancelled = false; state.fetchCtrl = null; }
+    if (b) resetBar();                                  // новый прогон — полоса с нуля
+    else { stopTrickle(); state.cancelled = false; state.fetchCtrl = null; }
   }
 
   $('cancel').onclick = () => {
