@@ -22,6 +22,7 @@ module.exports = async function extractPage(opts) {
 
   const images = [];
   const imageIdByUrl = new Map();
+  const usedFamilies = new Set(); // семейства, реально встреченные в тексте страницы
 
   const SKIP_TAGS = {
     SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEMPLATE: 1, META: 1, LINK: 1, TITLE: 1,
@@ -232,6 +233,11 @@ module.exports = async function extractPage(opts) {
   function textStyleOf(st, chars) {
     let weight = parseInt(st.fontWeight, 10);
     if (isNaN(weight)) weight = /bold/i.test(st.fontWeight || '') ? 700 : 400;
+    // Запоминаем семейства из стека — по ним потом отбираем реально нужные @font-face
+    String(st.fontFamily || '').split(',').forEach((f) => {
+      const n = f.trim().replace(/^["']|["']$/g, '').toLowerCase();
+      if (n) usedFamilies.add(n);
+    });
     const alignMap = {
       left: 'LEFT', start: 'LEFT', right: 'RIGHT', end: 'RIGHT',
       center: 'CENTER', justify: 'JUSTIFIED', 'justify-all': 'JUSTIFIED',
@@ -653,11 +659,78 @@ module.exports = async function extractPage(opts) {
     children: bodyKids,
   };
 
+  // Какие шрифты реально грузит сайт — семейство + имена файлов, чтобы человек
+  // при желании скачал и поставил их себе сам (плагин сам ничего не ставит).
+  function collectFonts() {
+    const byFam = new Map(); // lowerFamily -> { family, files:Set, embedded, loaded }
+    const ensure = (family) => {
+      const disp = String(family || '').replace(/^["']|["']$/g, '').trim();
+      if (!disp) return null;
+      const k = disp.toLowerCase();
+      let e = byFam.get(k);
+      if (!e) { e = { family: disp, files: new Set(), embedded: false, loaded: false }; byFam.set(k, e); }
+      return e;
+    };
+
+    // 1) @font-face из доступных таблиц стилей — даёт семейство и имена файлов
+    let sheets = [];
+    try { sheets = Array.from(doc.styleSheets); } catch (e) {}
+    for (const sheet of sheets) {
+      let rules = null;
+      try { rules = sheet.cssRules; } catch (e) { rules = null; } // cross-origin CSS недоступен
+      if (!rules) continue;
+      for (const rule of Array.from(rules)) {
+        const isFF = (typeof CSSFontFaceRule !== 'undefined' && rule instanceof CSSFontFaceRule) || rule.type === 5;
+        if (!isFF || !rule.style) continue;
+        const e = ensure(rule.style.getPropertyValue('font-family'));
+        if (!e) continue;
+        const src = rule.style.getPropertyValue('src') || '';
+        const re = /url\(\s*(['"]?)([^'")]+?)\1\s*\)/g;
+        let m;
+        while ((m = re.exec(src))) {
+          const u = m[2];
+          if (/^data:/i.test(u)) { e.embedded = true; continue; } // встроен base64 — файла нет
+          let file = '';
+          try {
+            const abs = new URL(u, sheet.href || location.href);
+            file = decodeURIComponent((abs.pathname.split('/').pop() || '').trim());
+          } catch (err) {
+            file = (u.split('?')[0].split('#')[0].split('/').pop() || '').trim();
+          }
+          if (file) e.files.add(file);
+        }
+      }
+    }
+
+    // 2) FontFaceSet — реально загруженные семейства (ловит и cross-origin, где файл не виден)
+    try {
+      if (doc.fonts && typeof doc.fonts.forEach === 'function') {
+        doc.fonts.forEach((ff) => {
+          if (ff && ff.status === 'loaded') { const e = ensure(ff.family); if (e) e.loaded = true; }
+        });
+      }
+    } catch (e) {}
+
+    // Оставляем только шрифты, что реально используются на странице
+    const all = Array.from(byFam.values());
+    let list = all.filter((e) => e.loaded || usedFamilies.has(e.family.toLowerCase()));
+    if (!list.length) list = all;
+    return list.map((e) => ({
+      family: e.family,
+      files: Array.from(e.files).slice(0, 8),
+      embedded: e.embedded,
+    })).slice(0, 24);
+  }
+
+  let fonts = [];
+  try { fonts = collectFonts(); } catch (e) { fonts = []; }
+
   return {
     root,
     pageWidth,
     pageHeight,
     images,
+    fonts,
     truncated,
     nodeCount,
     title: doc.title || location.hostname,

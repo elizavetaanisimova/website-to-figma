@@ -143,7 +143,8 @@
      Живёт на коралловой плашке, поэтому цвета зашиты, а не взяты из темы.
      Неактивные — белым по кораллу (4.55:1), заливать их полупрозрачным белым
      нельзя: фон светлеет и контраст проваливается. */
-  .lang-seg { display: inline-flex; gap: 4px; margin-left: auto; }
+  /* слева под заголовком — margin-left:auto убрали, чтобы не уезжало вправо */
+  .lang-seg { display: inline-flex; gap: 4px; }
   .lang-seg button {
     padding: 5px 9px; border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, .55);
@@ -454,6 +455,18 @@
   #done-card { background: var(--green-soft); }
   #done-card .title { color: var(--green); font-weight: 650; margin-bottom: 3px; font-size: 11.5px; }
   #done-card .muted { color: var(--ink2); }
+  /* список шрифтов сайта в карточке результата */
+  .font-list { margin-top: 9px; display: flex; flex-direction: column; gap: 8px; }
+  .font-list .fl-hint { color: var(--ink2); font-size: 10px; line-height: 1.35; }
+  .font-item { display: flex; flex-direction: column; gap: 3px; }
+  .font-item .fam { font-size: 11px; font-weight: 650; color: var(--ink); }
+  .font-item .fam-note { font-weight: 450; color: var(--ink2); }
+  .font-item .files { display: flex; flex-wrap: wrap; gap: 4px; }
+  .font-file {
+    font-size: 9.5px; color: var(--cream-ink); background: var(--cream);
+    padding: 2px 8px; border-radius: 999px; word-break: break-all;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
   #err-card {
     background: var(--red-soft);
     color: var(--red); white-space: pre-wrap; user-select: text; font-size: 11px;
@@ -576,8 +589,8 @@
     <div class="hero-row">
       <div class="lang-seg" id="lang-seg" role="group">
         <button type="button" data-v="en">EN</button>
-        <button type="button" data-v="ru">RU</button>
         <button type="button" data-v="es">ES</button>
+        <button type="button" data-v="ru">RU</button>
       </div>
     </div>
   </div>
@@ -848,6 +861,9 @@
       statusUpload: 'Uploading images to Figma…',
       statusStyles: 'Creating styles…',
       doneTitle: 'Done',
+      fontsTitle: 'Fonts on this site',
+      fontsHint: 'The plugin does not install fonts — download and install these yourself for an exact match.',
+      fontsEmbedded: 'embedded',
       lines_layers: (n, v) => n + ' layer' + enS(n) + (v > 1 ? ' across ' + v + ' variants' : ''),
       lines_al: (n) => n + ' auto layout frame' + enS(n),
       lines_styles: (n) => n + ' style' + enS(n) + ' created',
@@ -918,6 +934,9 @@
       statusUpload: 'Загружаем картинки в Figma…',
       statusStyles: 'Создаём стили…',
       doneTitle: 'Готово',
+      fontsTitle: 'Шрифты сайта',
+      fontsHint: 'Плагин не ставит шрифты — при желании скачайте и установите их сами для точного совпадения.',
+      fontsEmbedded: 'встроен',
       lines_layers: (n, v) => 'Слоёв: ' + n + (v > 1 ? ' в ' + v + ' ' + plural(v, 'варианте', 'вариантах', 'вариантах') : ''),
       lines_al: (n) => 'Auto Layout: ' + n + ' ' + plural(n, 'фрейм', 'фрейма', 'фреймов'),
       lines_styles: (n) => 'Стилей создано: ' + n,
@@ -990,6 +1009,9 @@
       statusUpload: 'Subiendo imágenes a Figma…',
       statusStyles: 'Creando estilos…',
       doneTitle: 'Listo',
+      fontsTitle: 'Fuentes del sitio',
+      fontsHint: 'El plugin no instala fuentes: descárgalas e instálalas tú mismo para una coincidencia exacta.',
+      fontsEmbedded: 'incrustada',
       lines_layers: (n, v) => n + (n === 1 ? ' capa' : ' capas') + (v > 1 ? ' en ' + v + ' variantes' : ''),
       lines_al: (n) => n + (n === 1 ? ' frame de auto layout' : ' frames de auto layout'),
       lines_styles: (n) => n + (n === 1 ? ' estilo creado' : ' estilos creados'),
@@ -1889,6 +1911,58 @@
     return body;
   }
 
+  // Список шрифтов сайта в карточке результата: семейство + имена файлов, чтобы
+  // человек при желании скачал и поставил их себе. Всё через textContent —
+  // имена приходят со стороннего сайта, вставлять их разметкой нельзя.
+  function renderFontList(body, fonts) {
+    if (!body || !Array.isArray(fonts) || !fonts.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'font-list';
+
+    const head = document.createElement('div');
+    head.className = 'title';
+    head.textContent = t('fontsTitle');
+    wrap.appendChild(head);
+
+    for (const f of fonts) {
+      if (!f || !f.family) continue;
+      const item = document.createElement('div');
+      item.className = 'font-item';
+
+      const fam = document.createElement('div');
+      fam.className = 'fam';
+      fam.textContent = f.family;
+      const files = Array.isArray(f.files) ? f.files.filter(Boolean) : [];
+      if (!files.length && f.embedded) {
+        const note = document.createElement('span');
+        note.className = 'fam-note';
+        note.textContent = ' · ' + t('fontsEmbedded');
+        fam.appendChild(note);
+      }
+      item.appendChild(fam);
+
+      if (files.length) {
+        const row = document.createElement('div');
+        row.className = 'files';
+        for (const name of files) {
+          const chip = document.createElement('span');
+          chip.className = 'font-file';
+          chip.textContent = name;
+          row.appendChild(chip);
+        }
+        item.appendChild(row);
+      }
+      wrap.appendChild(item);
+    }
+
+    const hint = document.createElement('div');
+    hint.className = 'fl-hint';
+    hint.textContent = t('fontsHint');
+    wrap.appendChild(hint);
+
+    body.appendChild(wrap);
+  }
+
   function setBusy(b) {
     state.busy = b;
     $('go').disabled = b;
@@ -1944,6 +2018,7 @@
     const totals = { created: 0, autoLayout: 0, styles: 0, imagesSkipped: 0, svgFailed: 0 };
     const pagesDone = {};
     let failed = 0;
+    let siteFonts = null; // шрифты сайта одни на все варианты — берём из первого ответа
     try {
       if (!(await ping())) throw new Error(t('serverHelp'));
       for (let i = 0; i < variants.length; i++) {
@@ -1974,6 +2049,7 @@
           continue;
         }
         if (state.cancelled) break;
+        if (!siteFonts && Array.isArray(data.fonts) && data.fonts.length) siteFonts = data.fonts;
 
         const imgN = Object.keys(data.imageData || {}).length;
         setStage(prefix + t('stageImages', imgN));
@@ -2011,6 +2087,7 @@
         if (totals.imagesSkipped) lines.push(t('lines_imgSkipped', totals.imagesSkipped));
         if (totals.svgFailed) lines.push(t('lines_svgFailed', totals.svgFailed));
         const doneBody = showDone(lines);
+        renderFontList(doneBody, siteFonts);
         const widthsUsed = [...new Set(variants.map((v) => v.width))].sort((a, b) => b - a);
         rememberSite(urlForHistory, {
           widths: widthsUsed,
