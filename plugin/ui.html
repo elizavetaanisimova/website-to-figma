@@ -1,46 +1,52 @@
 <meta charset="utf-8">
 <style>
+  /* Контрастные пары проверены: весь текст держит 4.5:1 в обеих темах.
+     --coral и --lav — только заливки, как текст они не проходят;
+     для текста акцентом служит --accent-ink. */
   :root {
-    --canvas: #FAFAFC;
-    --ink: #16181F;
-    --ink2: #878DA1;
-    --hair: #E9EAF1;
-    --fill: #F1F2F7;
+    --canvas: #F3EEE9;
     --surface: #FFFFFF;
-    --g1: #5B7CFA;
-    --g2: #8B5CF6;
-    --mint: #7CDFD0;
-    --green: #22A06B;
-    --green-soft: #E9F6F0;
-    --red: #E5484D;
-    --red-soft: #FCEEEF;
-    --ring: #C9D6FD;
-    --blob1-o: 0.40;
-    --blob2-o: 0.30;
-    --blob3-o: 0.16;
+    --fill: #EDE7E0;
+    --hair: #E2DAD1;
+    --ink: #1B1A18;
+    --ink2: #6F675F;
+    --coral: #EE8B5F;
+    --lav: #B3A2E5;
+    --yellow: #F2C14E;
+    --accent-ink: #B24413;
+    --on-accent: #1B1A18;
+    --green: #1F7A55;
+    --green-soft: #E4F0E9;
+    --red: #C3352E;
+    --red-soft: #F8E7E4;
+    --ring: #F3C3A8;
+    /* кремовый живёт только на коралловой плашке — она одинакова в обеих темах */
+    --cream: #FFF6F0;
+    --cream-ink: #6F675F;
   }
   html.figma-dark {
-    --canvas: #15161C;
-    --ink: #F2F3F8;
-    --ink2: #8F94A8;
-    --hair: #262834;
-    --fill: #20222C;
-    --surface: #2A2D3A;
-    --green: #47C48D;
-    --green-soft: #1C2F26;
-    --red: #F2708A;
-    --red-soft: #372028;
-    --ring: #3A4B7E;
-    --blob1-o: 0.26;
-    --blob2-o: 0.16;
-    --blob3-o: 0.10;
+    --canvas: #1A1817;
+    --surface: #272321;
+    --fill: #221F1D;
+    --hair: #332E2A;
+    --ink: #F5F1EC;
+    --ink2: #A79C91;
+    --coral: #F09A72;
+    --lav: #C0B1EC;
+    --accent-ink: #F09C75;
+    --green: #5FCB98;
+    --green-soft: #1D3129;
+    --red: #F0837C;
+    --red-soft: #3A2422;
+    --ring: #6B4630;
   }
   @media (prefers-color-scheme: dark) {
     html:not(.figma-light):not(.figma-dark) {
-      --canvas: #15161C; --ink: #F2F3F8; --ink2: #8F94A8; --hair: #262834;
-      --fill: #20222C; --surface: #2A2D3A;
-      --green: #47C48D; --green-soft: #1C2F26; --red: #F2708A; --red-soft: #372028;
-      --ring: #3A4B7E; --blob1-o: 0.26; --blob2-o: 0.16; --blob3-o: 0.10;
+      --canvas: #1A1817; --surface: #272321; --fill: #221F1D; --hair: #332E2A;
+      --ink: #F5F1EC; --ink2: #A79C91;
+      --coral: #F09A72; --lav: #C0B1EC; --accent-ink: #F09C75;
+      --green: #5FCB98; --green-soft: #1D3129; --red: #F0837C; --red-soft: #3A2422;
+      --ring: #6B4630;
     }
   }
 
@@ -53,67 +59,48 @@
     user-select: none;
     overflow-x: hidden;
   }
-  body > :not(.blobs) { position: relative; z-index: 1; }
 
-  /* ---------- блобы ---------- */
-  .blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  .blobs i { position: absolute; display: block; }
-  .blobs .b1 {
-    width: 250px; height: 220px; top: -80px; right: -70px;
-    background: linear-gradient(135deg, var(--g1), var(--g2));
-    border-radius: 58% 42% 55% 45% / 48% 55% 45% 52%;
-    filter: blur(46px); opacity: var(--blob1-o);
-    animation: drift1 17s ease-in-out infinite alternate;
+  /* ---------- шапка ----------
+     Плашка всегда коралловая — и в светлой теме, и в тёмной, поэтому
+     кремовый и его текст заданы фиксированно, а не через тему. */
+  .hero {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--coral); color: var(--on-accent);
+    border-radius: 18px; padding: 14px; overflow: hidden;
   }
-  .blobs .b2 {
-    width: 180px; height: 170px; top: 150px; left: -110px;
-    background: radial-gradient(circle at 40% 40%, var(--mint), transparent 72%);
-    filter: blur(30px); opacity: var(--blob2-o);
-    animation: drift2 23s ease-in-out infinite alternate;
-  }
-  .blobs .b3 {
-    width: 150px; height: 140px; bottom: -60px; left: 40%;
-    background: linear-gradient(160deg, var(--g2), var(--g1));
-    border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%;
-    filter: blur(48px); opacity: var(--blob3-o);
-    animation: drift1 21s ease-in-out infinite alternate-reverse;
-  }
-  @keyframes drift1 {
-    0%   { transform: translate(0, 0) scale(1); border-radius: 58% 42% 55% 45% / 48% 55% 45% 52%; }
-    100% { transform: translate(-14px, 16px) scale(1.08); border-radius: 45% 55% 42% 58% / 55% 44% 56% 45%; }
-  }
-  @keyframes drift2 {
-    0%   { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(18px, -14px) scale(1.12); }
-  }
-
-  /* ---------- шапка ---------- */
-  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-  .logo {
-    flex: none; width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, var(--g1), var(--g2));
-    border-radius: 42% 58% 52% 48% / 46% 42% 58% 54%;
-    animation: logo-morph 9s ease-in-out infinite alternate;
-  }
-  @keyframes logo-morph {
-    0%   { border-radius: 42% 58% 52% 48% / 46% 42% 58% 54%; }
-    50%  { border-radius: 55% 45% 40% 60% / 52% 56% 44% 48%; }
-    100% { border-radius: 46% 54% 58% 42% / 42% 50% 50% 58%; }
-  }
-  .head-titles { flex: 1; min-width: 0; }
-  .head h1 { font-size: 14px; font-weight: 700; letter-spacing: -0.25px; }
-  .tagline { color: var(--ink2); font-size: 10px; margin-top: 0; }
+  .hero-txt { flex: 1; min-width: 0; }
+  .hero h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  /* 78% — ближайший к коралловому фону оттенок, который ещё держит 4.5:1 (замерено) */
+  .tagline { font-size: 10.5px; margin-top: 2px; color: color-mix(in srgb, var(--on-accent) 78%, var(--coral)); }
+  .hero-art { flex: none; margin: -2px 0 -8px; }
   .server-pill {
-    flex: none; display: flex; align-items: center; gap: 6px;
-    font-size: 10px; font-weight: 500; color: var(--ink2);
-    cursor: pointer; padding: 4px 2px;
+    margin-top: 11px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border: 0; border-radius: 999px;
+    background: var(--cream); color: var(--cream-ink);
+    font: inherit; font-size: 10px; font-weight: 550; cursor: pointer;
   }
   .server-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); transition: background .3s; }
-  .server-pill.on .dot { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+  .server-pill.on .dot { background: var(--green); }
+
+  /* ---------- бейджи секций ---------- */
+  .sec-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .sec-head .field-label { margin: 0; flex: 1; }
+  .badge {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--on-accent);
+  }
+  .badge.lav { background: var(--lav); }
+  .badge.yellow { background: var(--yellow); }
+  .badge.coral { background: var(--coral); }
 
   /* ---------- секции ---------- */
-  .card { background: transparent; border: 0; padding: 0; margin-top: 18px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hair);
+    border-radius: 18px; padding: 14px; margin-top: 12px;
+  }
+  .card > .field-label:first-child { margin-top: 1px; }
   .field-label {
     font-size: 9px; font-weight: 650; text-transform: uppercase;
     letter-spacing: 1.3px; color: var(--ink2); margin-bottom: 8px;
@@ -132,14 +119,22 @@
     transition: border-color .15s, box-shadow .15s, background .15s;
   }
   .url-wrap input { padding-left: 34px; }
-  input:focus, select:focus { border-color: var(--g1); box-shadow: 0 0 0 3px var(--ring); background: var(--canvas); }
+  input:focus, select:focus { border-color: var(--coral); box-shadow: 0 0 0 3px var(--ring); }
+
+  /* сама карточка работает полем: внутри ничего не подкрашено,
+     рамка фокуса рисуется на карточке через :focus-within */
+  #url-card { padding: 5px; }
+  #url-card:focus-within { border-color: var(--coral); }
+  #url-card input { background: transparent; padding: 10px 12px 10px 32px; }
+  #url-card input:focus { border-color: transparent; box-shadow: none; }
+  #url-card .url-wrap svg { left: 11px; }
 
   /* ---------- поиск страниц ---------- */
-  .url-row { display: flex; gap: 8px; align-items: stretch; }
+  .url-row { display: flex; gap: 6px; align-items: stretch; }
   .url-row .url-wrap { flex: 1; min-width: 0; }
   .find-btn {
-    flex: none; padding: 0 13px; border-radius: 13px;
-    border: 1px solid var(--hair); background: transparent; color: var(--ink2);
+    flex: none; padding: 0 13px; border-radius: 14px;
+    border: 1px solid transparent; background: var(--fill); color: var(--ink2);
     font: inherit; font-size: 11px; font-weight: 550; cursor: pointer;
     display: flex; align-items: center; gap: 6px; white-space: nowrap;
     transition: all .13s;
@@ -152,7 +147,7 @@
   .pages-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .pages-head .field-label { margin: 0; flex: 1; }
   .link-btn {
-    border: 0; background: transparent; color: var(--g1);
+    border: 0; background: transparent; color: var(--accent-ink);
     font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer;
     padding: 2px 4px; border-radius: 6px;
   }
@@ -161,11 +156,11 @@
   .pages-filter input { padding: 8px 12px; border-radius: 11px; font-size: 11px; }
   .pages-list {
     max-height: 220px; overflow-y: auto; overscroll-behavior: contain;
-    border: 1px solid var(--hair); border-radius: 13px; background: var(--surface);
   }
   .page-row {
     display: flex; align-items: center; gap: 9px;
-    padding: 7px 11px; cursor: pointer; border-bottom: 1px solid var(--hair);
+    padding: 8px; margin: 0 -8px;
+    cursor: pointer; border-bottom: 1px solid var(--hair);
   }
   .page-row:last-child { border-bottom: 0; }
   .page-row:hover { background: var(--fill); }
@@ -193,7 +188,8 @@
   }
   .pages-foot .spacer { flex: 1; }
   .pages-warn { color: var(--red); }
-  .pages-empty { padding: 14px; text-align: center; color: var(--ink2); font-size: 10.5px; }
+  .pages-empty { padding: 18px 14px 14px; text-align: center; color: var(--ink2); font-size: 10.5px; }
+  .pages-empty svg { display: block; margin: 0 auto 8px; }
 
   /* ---------- чипы устройств ---------- */
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -216,16 +212,15 @@
   .chip input::placeholder { color: inherit; opacity: .45; }
 
   /* ---------- сегменты темы ---------- */
-  .seg { display: flex; background: var(--fill); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg { display: inline-flex; background: var(--fill); border-radius: 999px; padding: 3px; gap: 3px; }
   .seg button {
-    flex: 1; padding: 7px 4px; border: 0; background: transparent;
-    color: var(--ink2); font: inherit; font-size: 11px; font-weight: 500;
+    flex: none; padding: 7px 15px; border: 0;
+    background: var(--surface); color: var(--ink2);
+    font: inherit; font-size: 11px; font-weight: 500;
     border-radius: 999px; cursor: pointer; transition: all .13s;
   }
-  .seg button.on {
-    background: var(--surface); color: var(--ink); font-weight: 650;
-    box-shadow: 0 1px 4px rgba(15, 18, 34, 0.10);
-  }
+  .seg button:hover { color: var(--ink); }
+  .seg button.on { background: var(--ink); color: var(--canvas); font-weight: 650; }
 
   /* ---------- опции ---------- */
   .opt {
@@ -243,7 +238,7 @@
   .toggle::after {
     content: ''; position: absolute; top: 2.5px; left: 3px;
     width: 15px; height: 15px; border-radius: 50%;
-    background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    background: var(--surface);
     transition: left .15s;
   }
   html.figma-dark .toggle::after { background: var(--ink2); }
@@ -252,58 +247,73 @@
 
   /* ---------- кнопки ---------- */
   .btn {
-    width: 100%; margin-top: 20px; padding: 13px;
+    width: 100%; margin-top: 14px; padding: 13px;
     border: 0; border-radius: 999px;
-    background: linear-gradient(120deg, var(--g1), var(--g2));
-    color: #fff;
+    background: var(--coral);
+    color: var(--on-accent);
     font: inherit; font-size: 12.5px; font-weight: 650; letter-spacing: 0.1px;
     cursor: pointer;
-    box-shadow: 0 10px 26px rgba(102, 96, 246, 0.24);
-    transition: filter .15s, transform .06s, box-shadow .15s;
+    transition: filter .15s, transform .06s;
   }
-  .btn:hover { filter: brightness(1.07); }
+  .btn:hover { filter: brightness(1.05); }
   .btn:active { transform: translateY(1px); }
-  .btn:disabled { opacity: .45; cursor: default; box-shadow: none; }
+  .btn:disabled { opacity: .45; cursor: default; }
   .btn.secondary {
-    background: var(--ink); color: var(--canvas); box-shadow: none;
+    background: var(--ink); color: var(--canvas);
   }
   .btn.ghost-danger {
-    background: transparent; color: var(--red);
-    border: 1px solid var(--hair); box-shadow: none;
+    background: var(--surface); color: var(--red);
+    border: 1px solid var(--hair);
     padding: 9px;
   }
   .btn.ghost-danger:hover { border-color: var(--red); filter: none; }
   .btn-row { display: flex; gap: 8px; align-items: stretch; }
-  .btn-row .btn { margin-top: 20px; }
-  :focus-visible { outline: 2px solid var(--g1); outline-offset: 2px; }
+  .btn-row .btn { margin-top: 14px; }
+  :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 
   /* ---------- прогресс ---------- */
   #progress { display: none; margin-top: 16px; }
   #stage { font-size: 11px; color: var(--ink2); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
   .spinner {
     width: 12px; height: 12px; flex: none;
-    border: 2px solid var(--hair); border-top-color: var(--g1);
+    border: 2px solid var(--hair); border-top-color: var(--coral);
     border-radius: 50%; animation: spin .8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   #bar { height: 5px; background: var(--fill); border-radius: 999px; overflow: hidden; }
   #fill {
     height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--g1), var(--g2));
+    background: var(--coral);
     border-radius: 999px; transition: width .25s;
   }
 
   /* ---------- результат / ошибки ---------- */
-  #done-card { display: none; background: var(--green-soft); border-radius: 14px; padding: 12px 14px; }
+  #done-card, #err-card { display: none; gap: 10px; align-items: flex-start; border-color: transparent; }
+  #done-card { background: var(--green-soft); }
   #done-card .title { color: var(--green); font-weight: 650; margin-bottom: 3px; font-size: 11.5px; }
   #done-card .muted { color: var(--ink2); }
   #err-card {
-    display: none; background: var(--red-soft); border-radius: 14px; padding: 12px 14px;
+    background: var(--red-soft);
     color: var(--red); white-space: pre-wrap; user-select: text; font-size: 11px;
   }
+  .state-badge {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .state-body { flex: 1; min-width: 0; }
+  #done-card .state-badge { background: var(--green); color: var(--green-soft); }
+  #err-card .state-badge { background: var(--red); color: var(--red-soft); }
   #session-hint {
-    display: none; background: var(--fill); border-radius: 14px; padding: 11px 13px;
+    display: none; background: var(--fill); border-color: transparent;
     color: var(--ink2); font-size: 10.5px;
+  }
+  /* появление вместо рывка: анимация стартует, когда JS снимает display:none */
+  #progress, #done-card, #err-card, #session-hint, #pages {
+    animation: card-in .18s ease-out both;
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
   }
 
   /* ---------- дополнительно ---------- */
@@ -345,31 +355,30 @@
   .don-btn:hover { color: var(--ink); border-color: var(--ink2); }
 
   @media (prefers-reduced-motion: reduce) {
-    .blobs i, .logo { animation: none; }
+    #progress, #done-card, #err-card, #session-hint, #pages { animation: none; }
     * { transition-duration: 0.01ms !important; }
   }
 </style>
-<div class="blobs" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
-
-<div class="head">
-  <div class="logo" aria-hidden="true">
-    <svg width="16" height="16" viewBox="0 0 128 128" fill="none">
-      <path d="M24 24 L57 57" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
-      <path d="M58 30 L58 58 L30 58" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="58" y="58" width="46" height="46" rx="14" stroke="#fff" stroke-width="11"/>
-    </svg>
-  </div>
-  <div class="head-titles">
+<div class="hero">
+  <div class="hero-txt">
     <h1>Website to Figma</h1>
     <div class="tagline" data-i18n="tagline"></div>
+    <button class="server-pill" id="server-pill" type="button">
+      <span class="dot"></span><span id="server-label"></span>
+    </button>
   </div>
-  <div class="server-pill" id="server-pill">
-    <div class="dot"></div><span id="server-label"></span>
-  </div>
+  <svg class="hero-art" width="82" height="72" viewBox="0 0 82 72" fill="none" aria-hidden="true">
+    <rect x="36" y="4" width="42" height="54" rx="10" fill="#B3A2E5"/>
+    <rect x="46" y="16" width="22" height="6" rx="3" fill="#FFF6F0" opacity=".75"/>
+    <rect x="46" y="27" width="14" height="6" rx="3" fill="#FFF6F0" opacity=".75"/>
+    <rect x="4" y="14" width="42" height="54" rx="10" fill="#FFF6F0"/>
+    <rect x="12" y="23" width="26" height="10" rx="5" fill="#EE8B5F"/>
+    <rect x="12" y="39" width="18" height="5" rx="2.5" fill="#E2DAD1"/>
+    <rect x="12" y="49" width="24" height="5" rx="2.5" fill="#E2DAD1"/>
+  </svg>
 </div>
 
-<div class="card">
-  <div class="field-label" data-i18n="urlLabel"></div>
+<div class="card" id="url-card">
   <div class="url-row">
     <div class="url-wrap">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
@@ -388,6 +397,9 @@
 
 <div class="card" id="pages">
   <div class="pages-head">
+    <span class="badge coral" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    </span>
     <div class="field-label" id="pages-title"></div>
     <button class="link-btn" id="pages-all"></button>
     <button class="link-btn" id="pages-none"></button>
@@ -404,7 +416,12 @@
 </div>
 
 <div class="card">
-  <div class="field-label" data-i18n="devices"></div>
+  <div class="sec-head">
+    <span class="badge lav" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+    </span>
+    <div class="field-label" data-i18n="devices"></div>
+  </div>
   <div class="chips" id="devices">
     <div class="chip" data-w="1440">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
@@ -430,7 +447,12 @@
 </div>
 
 <div class="card">
-  <div class="field-label" data-i18n="theme"></div>
+  <div class="sec-head">
+    <span class="badge yellow" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+    </span>
+    <div class="field-label" data-i18n="theme"></div>
+  </div>
   <div class="seg" id="theme">
     <button data-v="light" class="on" data-i18n="light"></button>
     <button data-v="dark" data-i18n="dark"></button>
@@ -439,7 +461,6 @@
 </div>
 
 <div class="card">
-  <div class="field-label" data-i18n="options"></div>
   <div class="opt on" id="opt-autolayout">
     <div><div class="t" data-i18n="alTitle"></div><div class="d" data-i18n="alDesc"></div></div>
     <div class="toggle"></div>
@@ -487,7 +508,7 @@
 <button class="btn" id="go"></button>
 <div class="btn-row" id="session-btns" style="display:none">
   <button class="btn secondary" id="session-capture"></button>
-  <button class="btn ghost-danger" id="session-close" style="width:auto;" title="Close browser">&times;</button>
+  <button class="btn ghost-danger" id="session-close" style="width:auto;">&times;</button>
 </div>
 <div class="card" id="session-hint"></div>
 <button class="btn ghost-danger" id="cancel" style="display:none"></button>
@@ -532,7 +553,6 @@
     en: {
       tagline: 'Any website, as editable layers',
       serverOn: 'Server running', serverCloud: 'Cloud server', serverOff: 'Server offline',
-      urlLabel: 'Website link',
       findBtn: 'Pages', findTitle: 'Find every page on this site',
       findStage: 'Reading the sitemap…',
       findStageCrawl: 'No sitemap — following links instead, this is slower…',
@@ -552,7 +572,6 @@
       devices: 'Devices',
       desktop: 'Desktop', laptop: 'Laptop', tablet: 'Tablet', phone: 'Phone', custom: 'Custom',
       theme: 'Website theme', light: 'Light', dark: 'Dark', both: 'Both',
-      options: 'Options',
       alTitle: 'Auto Layout', alDesc: 'Flex containers become auto layout frames',
       shotTitle: 'Reference screenshot', shotDesc: 'A locked screenshot lands beside the import, for pixel checks',
       stylesTitle: 'Color & text styles', stylesDesc: "The site's palette and type become Figma styles",
@@ -561,7 +580,7 @@
       loginDescCloud: 'Local server only',
       advanced: 'Advanced', maxh: 'Max height', language: 'Language', serverLabel: 'Server address',
       importBtn: 'Import', loginOpenBtn: 'Open a browser to sign in',
-      captureBtn: 'Import the open page',
+      captureBtn: 'Import the open page', closeTitle: 'Close browser',
       cancelBtn: 'Cancel', canceling: 'Canceling…',
       openingBrowser: 'Opening a browser window…',
       stageOpen: (w, th) => 'Opening the page (' + w + 'px' + (th ? ', ' + th : '') + ')… up to a minute',
@@ -591,7 +610,6 @@
     ru: {
       tagline: 'Любой сайт — в редактируемые слои',
       serverOn: 'Сервер работает', serverCloud: 'Облачный сервер', serverOff: 'Сервер не отвечает',
-      urlLabel: 'Ссылка на сайт',
       findBtn: 'Страницы', findTitle: 'Найти все страницы сайта',
       findStage: 'Читаем карту сайта…',
       findStageCrawl: 'Карты сайта нет — идём по ссылкам, это дольше…',
@@ -611,7 +629,6 @@
       devices: 'Устройства',
       desktop: 'Десктоп', laptop: 'Ноутбук', tablet: 'Планшет', phone: 'Телефон', custom: 'Своя',
       theme: 'Тема сайта', light: 'Светлая', dark: 'Тёмная', both: 'Обе',
-      options: 'Опции',
       alTitle: 'Auto Layout', alDesc: 'Flex-контейнеры станут авто-лейаутами',
       shotTitle: 'Скриншот-эталон', shotDesc: 'Рядом ляжет настоящий скриншот — сверять по пикселям',
       stylesTitle: 'Стили цветов и текста', stylesDesc: 'Палитра и шрифты сайта станут стилями Figma',
@@ -620,7 +637,7 @@
       loginDescCloud: 'Только со своим сервером',
       advanced: 'Дополнительно', maxh: 'Макс. высота', language: 'Язык', serverLabel: 'Адрес сервера',
       importBtn: 'Импортировать', loginOpenBtn: 'Открыть браузер для входа',
-      captureBtn: 'Импортировать открытую страницу',
+      captureBtn: 'Импортировать открытую страницу', closeTitle: 'Закрыть браузер',
       cancelBtn: 'Отменить', canceling: 'Отменяем…',
       openingBrowser: 'Открываем окно браузера…',
       stageOpen: (w, th) => 'Открываем страницу (' + w + 'px' + (th ? ', ' + th : '') + ')… до минуты',
@@ -689,6 +706,7 @@
     $('session-capture').textContent = t('captureBtn');
     $('find-label').textContent = t('findBtn');
     $('find').title = t('findTitle');
+    $('session-close').title = t('closeTitle');
     $('pages-all').textContent = t('pagesAll');
     $('pages-none').textContent = t('pagesNone');
     $('pages-hide').textContent = t('pagesHide');
@@ -1008,7 +1026,15 @@
     if (!shown.length) {
       const empty = document.createElement('div');
       empty.className = 'pages-empty';
-      empty.textContent = t('pagesNothing');
+      empty.innerHTML = '<svg width="56" height="46" viewBox="0 0 56 46" fill="none" aria-hidden="true">'
+        + '<rect x="7" y="4" width="27" height="36" rx="7" fill="var(--fill)"/>'
+        + '<rect x="13" y="12" width="15" height="4" rx="2" fill="var(--hair)"/>'
+        + '<rect x="13" y="20" width="10" height="4" rx="2" fill="var(--hair)"/>'
+        + '<circle cx="37" cy="27" r="9" fill="var(--surface)" stroke="var(--ink2)" stroke-width="2.4"/>'
+        + '<path d="M44 34l5 5" stroke="var(--ink2)" stroke-width="2.4" stroke-linecap="round"/></svg>';
+      const cap = document.createElement('div');
+      cap.textContent = t('pagesNothing');
+      empty.appendChild(cap);
       list.appendChild(empty);
     }
 
@@ -1126,26 +1152,34 @@
     $('done-card').style.display = 'none';
     $('err-card').style.display = 'none';
   }
-  function showError(text) {
-    $('err-card').textContent = text;
-    $('err-card').style.display = 'block';
+  // Значок рисуем из константы, текст — всегда через textContent:
+  // в ошибку попадает ответ сервера, вставлять его как разметку нельзя.
+  function stateBody(card, iconPath) {
+    card.innerHTML = '<span class="state-badge" aria-hidden="true">'
+      + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      + ' stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + iconPath + '</svg></span>';
+    const body = document.createElement('div');
+    body.className = 'state-body';
+    card.appendChild(body);
+    card.style.display = 'flex';
     $('progress').style.display = 'none';
+    return body;
+  }
+  function showError(text) {
+    stateBody($('err-card'), '<path d="M12 7v6"/><path d="M12 17h.01"/>').textContent = text;
   }
   function showDone(lines) {
-    const card = $('done-card');
-    card.innerHTML = '';
+    const body = stateBody($('done-card'), '<path d="M4.5 12.5l5 5L19.5 7"/>');
     const title = document.createElement('div');
     title.className = 'title';
     title.textContent = t('doneTitle');
-    card.appendChild(title);
+    body.appendChild(title);
     for (const line of lines) {
       const d = document.createElement('div');
       d.className = 'muted';
       d.textContent = line;
-      card.appendChild(d);
+      body.appendChild(d);
     }
-    card.style.display = 'block';
-    $('progress').style.display = 'none';
   }
 
   function setBusy(b) {
