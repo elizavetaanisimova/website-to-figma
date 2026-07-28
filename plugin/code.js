@@ -502,13 +502,15 @@ function buildScreenshotFrame(slices, W, H, label, stats, name) {
 
 // ---------- сборка ----------
 
+const es = (n) => (n === 1 ? '' : 's');
+
 const NOTIFY = {
   en: {
-    done: (n, al) => 'Imported: ' + n + ' layers' + (al ? ', Auto Layout: ' + al + ' frames' : ''),
+    done: (n, al) => n + ' layer' + es(n) + ' imported' + (al ? ', ' + al + ' auto layout frame' + es(al) : ''),
     cancelled: 'Import canceled',
   },
   ru: {
-    done: (n, al) => 'Импортировано: ' + n + ' слоёв' + (al ? ', Auto Layout: ' + al + ' фреймов' : ''),
+    done: (n, al) => 'Слоёв: ' + n + (al ? ', Auto Layout: ' + al : ''),
     cancelled: 'Импорт отменён',
   },
 };

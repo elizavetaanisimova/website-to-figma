@@ -1,5 +1,5 @@
 {
-  "name": "Site → Figma (Local)",
+  "name": "Website to Figma — HTML to Figma, URL to Figma — Import any site into editable layers (free)",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
@@ -7,6 +7,6 @@
   "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": ["*"],
-    "reasoning": "Плагин обращается к локальному серверу рендеринга (http://127.0.0.1:4511), который открывает страницу и отдаёт её слои и картинки."
+    "reasoning": "The plugin sends a URL to a renderer service, which opens that page in a real Chrome browser and returns its layers, styles and images. Users can point the plugin at a renderer they run themselves, so the address is not fixed. The imported page also references images on arbitrary third-party domains, which rules out an allowlist."
   }
 }

@@ -1,0 +1,38 @@
+Website to Figma — Source Available License
+Copyright (c) 2026 Elizaveta Anisimova. All rights reserved.
+
+The source code in this repository is published so that anyone can read it,
+audit it, and run it. It is not open source: the permissions below are the
+only ones granted.
+
+YOU MAY
+
+1. Read, study and audit the source code.
+2. Run the renderer server on your own machines, for any purpose,
+   including commercial work, with no limit on the number of imports.
+3. Install and use the Figma plugin from its official Figma Community
+   listing, for any purpose, including commercial work.
+4. Modify the code for your own use, and run your modified version
+   privately or inside your own organization.
+5. Submit changes back to this repository as a pull request.
+
+YOU MAY NOT
+
+1. Publish this plugin, or any work derived from it, to the Figma Community
+   or to any other plugin, extension or app marketplace.
+2. Redistribute the code or a modified version of it to third parties,
+   whether or not for a fee — this includes hosting it as a public or paid
+   service offered to others.
+3. Remove or alter this license, the copyright notice, or the attribution
+   shown inside the plugin.
+
+The author may grant exceptions in writing. Ask.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

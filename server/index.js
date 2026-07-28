@@ -86,27 +86,30 @@ const MSG = {
   'no-url': ['Missing url', 'Не указан url'],
   'open-fail': ['Could not open the page: ', 'Не удалось открыть страницу: '],
   'http-only': ['Only http/https links are allowed', 'Разрешены только http/https ссылки'],
-  'blocked': ['This address is not reachable from the cloud server', 'Этот адрес недоступен на облачном сервере'],
-  'no-host': ['Could not resolve host: ', 'Не удалось найти такой сайт: '],
-  'rate': [
-    'Rate limit: at most {n} imports per hour per address. Try later or self-host the server (see the plugin page).',
-    'Лимит: не больше {n} импортов в час с одного адреса. Попробуйте позже или запустите свой сервер (инструкция на странице плагина).',
+  'blocked': [
+    'The cloud server cannot reach this address. Run the renderer on your own machine to import it.',
+    'Облачный сервер не достаёт до этого адреса. Чтобы импортировать, запустите сервер у себя.',
   ],
-  'busy': ['The server is busy right now, try again in a minute', 'Сервер сейчас перегружен, попробуйте через минуту'],
-  'timeout': ['Timeout: the operation took longer than {n} seconds', 'Таймаут: операция шла дольше {n} секунд'],
+  'no-host': ['No such site: ', 'Такого сайта нет: '],
+  'rate': [
+    'Limit reached: {n} imports an hour from one address. Try later, or run the renderer yourself.',
+    'Лимит: {n} импортов в час с одного адреса. Попробуйте позже или запустите сервер у себя.',
+  ],
+  'busy': ['Too many imports at once — try again in a minute', 'Слишком много импортов разом — попробуйте через минуту'],
+  'timeout': ['Gave up after {n} seconds', 'Не уложились в {n} секунд'],
   'bad-json': ['Invalid JSON', 'Некорректный JSON'],
   'no-pages': [
-    'No pages found on this site. Try importing the address directly.',
-    'Не удалось найти страницы этого сайта. Попробуйте импортировать адрес напрямую.',
+    'Found no pages on this site. Import the address directly instead.',
+    'Страниц у этого сайта не нашлось. Импортируйте адрес напрямую.',
   ],
   'session-gone': [
-    'Session not found — the browser window was closed. Open the browser again.',
-    'Сессия не найдена — окно браузера было закрыто. Откройте браузер заново.',
+    'The browser window was closed. Open it again.',
+    'Окно браузера закрыли. Откройте его заново.',
   ],
-  'tabs-closed': ['All tabs are closed. Open the browser again.', 'Все вкладки закрыты. Откройте браузер заново.'],
+  'tabs-closed': ['Every tab is closed. Open the browser again.', 'Все вкладки закрыты. Откройте браузер заново.'],
   'session-cloud': [
-    'The behind-login mode works only with a local server: a cloud server cannot open a browser window on your computer. Start the local server (npm start) and set its address in Advanced.',
-    'Режим «Сайт за логином» доступен только с локальным сервером: облачный сервер не может открыть окно браузера на вашем компьютере. Запустите локальный сервер (npm start) и укажите его адрес в настройках.',
+    'A cloud server cannot open a browser on your computer, so this mode needs the renderer running on your machine. Start it, then put its address into Advanced.',
+    'Облачный сервер не может открыть браузер на вашем компьютере — для этого режима нужен свой. Запустите его и впишите адрес в «Дополнительно».',
   ],
 };
 
@@ -551,15 +554,15 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  sendJson(res, 404, { error: 'Не найдено' });
+  sendJson(res, 404, { error: 'Not found' });
 });
 
 server.listen(PORT, HOST, () => {
   console.log('');
-  console.log('  Site → Figma: сервер рендеринга запущен (v3' + (CLOUD ? ', облачный режим' : '') + ')');
+  console.log('  Website to Figma — renderer v3' + (CLOUD ? ' (cloud mode)' : '') + ' is up');
   console.log('  http://' + (HOST === '0.0.0.0' ? '0.0.0.0' : '127.0.0.1') + ':' + PORT);
   console.log('');
-  if (!CLOUD) console.log('  Оставьте это окно открытым и запустите плагин в Figma.');
-  else console.log('  Лимиты: ' + RATE_LIMIT + ' импортов/час на IP, ' + MAX_CONCURRENT + ' параллельно.');
+  if (!CLOUD) console.log('  Leave this window open and start the plugin in Figma.');
+  else console.log('  Limits: ' + RATE_LIMIT + ' imports/hour per IP, ' + MAX_CONCURRENT + ' at a time.');
   console.log('');
 });

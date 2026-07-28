@@ -1,45 +1,57 @@
-# Публикация плагина в Figma Community
+# Публикация в Figma Community
 
-План: 1) выложить код на GitHub → 2) задеплоить сервер в облако → 3) прописать адрес
-сервера в плагине → 4) опубликовать плагин в Community.
+Порядок: 1) репозиторий на GitHub → 2) сервер в облако → 3) прописать его адрес
+в плагине → 4) отправить плагин на ревью.
 
----
-
-## Шаг 1. GitHub
-
-1. Создайте репозиторий (например, `site-to-figma`) на github.com.
-2. Из папки `figma-site-importer`:
-   ```bash
-   git init
-   git add .
-   git commit -m "Site to Figma plugin + renderer server"
-   git branch -M main
-   git remote add origin https://github.com/ВАШ_ЛОГИН/site-to-figma.git
-   git push -u origin main
-   ```
-
-GitHub нужен и для деплоя (Railway тянет код оттуда), и как «сайт» плагина для карточки.
+Тексты карточки и теги внизу — они собраны не на глаз, а по разбору выдачи Figma
+Community. Логика решений записана в разделе «Почему тексты такие».
 
 ---
 
-## Шаг 2. Деплой сервера в облако
+## Шаг 1. Репозиторий
 
-Сервер уже готов к облаку: `Dockerfile` в папке `server/`, режим включается переменной
-`CLOUD=1` (лимиты запросов, защита от обращений к внутренним адресам, отключение
-режима «за логином» — всё автоматически).
+Репозиторий: `elizavetaanisimova/website-to-figma`.
 
-### Вариант A — Railway (проще всего, всё через сайт)
+**Description** (Settings → About) — его показывает и GitHub, и Google:
 
-1. Зарегистрируйтесь на railway.com (план Hobby ~$5/мес).
-2. **New Project → Deploy from GitHub repo** → выберите репозиторий.
-3. В настройках сервиса: **Root Directory** = `server` (Railway сам найдёт Dockerfile).
-4. Variables: `CLOUD=1` (PORT Railway подставит сам — сервер его читает).
-5. **Settings → Networking → Generate Domain** — получите адрес вида
-   `https://site-to-figma-production.up.railway.app`.
-6. Проверьте: откройте `https://ваш-адрес/health` — должно вернуться
-   `"cloud":true`.
+```
+Import any website into editable Figma layers — frames, text, images, vectors and Auto Layout. Free website to Figma / HTML to Figma importer with a self-hosted renderer.
+```
 
-### Вариант B — Fly.io (дешевле, через терминал)
+**Topics:** `figma-plugin` · `figma` · `website-to-figma` · `html-to-figma`
+· `url-to-figma` · `design-tools` · `playwright` · `web-scraping` · `figma-import`
+
+Лицензия — `LICENSE` в корне: код открыт для чтения и запуска, переиздавать копию
+в Community нельзя.
+
+---
+
+## Шаг 2. Сервер в облако
+
+Без облачного сервера плагин на ревью не пройдёт. Правила Figma прямо запрещают
+требовать от пользователя установки отдельных пакетов, а принципы безопасности —
+ходить по HTTP. Плагин, который сразу после установки работает по HTTPS с общим
+сервером, обе претензии снимает; свой сервер остаётся опцией для сайтов за логином
+и для тех, кому нужен безлимит.
+
+Режим включается переменной `CLOUD=1` — вместе с ней поднимаются лимиты запросов,
+защита от обращений к внутренним адресам и отключается режим «за логином».
+
+### Вариант A — Oracle Cloud Always Free ($0)
+
+Отдельная инструкция: [DEPLOY-ORACLE.md](DEPLOY-ORACLE.md). Виртуалка ARM с 24 ГБ
+памяти навсегда бесплатно, docker-compose и Caddy с автоматическим HTTPS уже
+описаны в `deploy/`. Дольше в настройке, дальше — бесплатно.
+
+### Вариант B — Railway (~$5/мес, всё через сайт)
+
+1. **New Project → Deploy from GitHub repo** → выберите репозиторий.
+2. **Root Directory** = `server` (Dockerfile Railway найдёт сам).
+3. Variables: `CLOUD=1`. Порт Railway подставит сам, сервер его читает.
+4. **Settings → Networking → Generate Domain**.
+5. Проверка: `https://ваш-адрес/health` должен вернуть `"cloud":true`.
+
+### Вариант C — Fly.io (доллары в месяц)
 
 ```bash
 brew install flyctl
@@ -48,141 +60,197 @@ fly auth signup
 fly launch --copy-config --no-deploy   # имя приложения поменяйте на уникальное
 fly deploy
 ```
-Конфиг `fly.toml` уже готов (автостоп машин — когда никто не пользуется, не платите).
-Адрес будет `https://ваше-имя.fly.dev`.
 
-### Вариант C — свой VPS
+`fly.toml` готов, машины останавливаются на простое.
+
+### Вариант D — свой VPS
 
 ```bash
-docker build -t site-to-figma ./server
-docker run -d -p 4511:4511 -e CLOUD=1 --restart unless-stopped site-to-figma
+docker build -t website-to-figma ./server
+docker run -d -p 4511:4511 -e CLOUD=1 --restart unless-stopped website-to-figma
 ```
-Обязательно поставьте перед ним HTTPS (Caddy/nginx + certbot): Figma в браузере
-не даст плагину ходить по голому http (кроме localhost).
 
-**Важно:** переменные `RATE_LIMIT` (импортов в час с IP, по умолчанию 20) и
-`MAX_CONCURRENT` (параллельных рендеров, по умолчанию 2) можно менять. Для старта
-хватит машины с 1 GB RAM.
+HTTPS обязателен (Caddy или nginx + certbot): Figma не пустит плагин на голый http,
+кроме localhost.
+
+`RATE_LIMIT` (импортов в час с одного адреса, по умолчанию 20) и `MAX_CONCURRENT`
+(параллельных рендеров, по умолчанию 2) настраиваются переменными. Для старта хватит
+1 ГБ памяти.
 
 ---
 
-## Шаг 3. Прописать адрес сервера в плагине
+## Шаг 3. Адрес сервера в плагине
 
-В файле `plugin/ui.html` найдите строку:
+В `plugin/ui.html`:
 
 ```js
 const DEFAULT_SERVER = 'http://127.0.0.1:4511';
 ```
 
-и замените на ваш облачный адрес:
+заменить на облачный адрес:
 
 ```js
-const DEFAULT_SERVER = 'https://ваш-адрес.up.railway.app';
+const DEFAULT_SERVER = 'https://ваш-адрес';
 ```
 
-Пользователи смогут переключиться на свой локальный сервер в «Дополнительно»
-(например, ради режима «Сайт за логином» — в облаке он автоматически скрыт).
+Свой сервер пользователь пропишет в «Дополнительно» — там же, где включается режим
+«Сайт за логином», недоступный в облаке.
 
 ---
 
-## Шаг 4. Публикация в Figma Community
+## Шаг 4. Отправка на ревью
 
-1. Откройте Figma (desktop), меню **Plugins → Development → ваш плагин → Publish…**
-   (плагин должен быть импортирован через Import plugin from manifest).
-2. Заполните карточку — готовые тексты ниже, картинки в папке `assets/`:
-   - **Icon**: `assets/icon.png` (128×128)
-   - **Cover art**: `assets/cover.png` (1920×960)
-3. **Publisher profile** — заполняется один раз (имя, аватар).
-4. **Support contact** — ваша почта.
-5. Нажмите **Submit for review**. Модерация Figma обычно занимает от пары дней
-   до ~2 недель. Ревьюеры увидят `networkAccess` из манифеста — причина уже
-   вписана в поле `reasoning`.
-6. После одобрения плагин появится в Community — любой сможет установить бесплатно.
-   Обновления публикуются той же кнопкой (**Publish new release**).
+1. Figma (desktop) → **Plugins → Development → ваш плагин → Publish…**
+2. Заполнить карточку текстами ниже. Картинки в `assets/`: `icon.png` (128×128),
+   `cover.png` (1920×960 — **проверьте, Figma просит 1920×1080**).
+3. **Publisher profile** — один раз: имя и аватар.
+4. **Support contact** — почта.
+5. **Submit for review.** Ревью занимает от нескольких дней до пары недель.
 
-### Готовые тексты для карточки (на английском)
+---
 
-**Name**
+## Тексты карточки
+
+### Name
+
 ```
-Site to Figma
+Website to Figma — HTML to Figma, URL to Figma — Import any site into editable layers (free)
 ```
 
-**Tagline** (короткий слоган)
+92 символа. Самое длинное имя, встреченное в выдаче, — ровно 100, так что запас есть.
+
+### Tagline
+
 ```
-Import any website into editable Figma layers — free
+Import any website into editable Figma layers — frames, text, images, vectors. Free, no limits.
 ```
 
-**Description**
+### Description
+
 ```
-Import any website into editable Figma layers — just paste a URL. A free, open-source
-website-to-Figma importer: convert HTML to design, turn any web page into frames,
-text, images and vectors you can actually edit. No subscription, no import limits.
+Paste a URL. Get the page back as layers you can actually edit — frames, text in the
+right fonts, images, SVG vectors, gradients, shadows. Not a screenshot, not a flattened
+image sitting in a frame.
 
-WHAT YOU GET
-• Real layers: frames, text, images, vectors — not a screenshot
-• Auto Layout: flex containers become proper auto-layout frames with gaps, padding and alignment
-• Multiple devices at once: desktop, laptop, tablet, phone or any custom width
-• Light & dark theme import (prefers-color-scheme emulation)
-• Color and text styles generated from the site's palette and typography
-• Pixel-perfect reference screenshot placed next to the import
-• SVG icons imported as vectors, webp/avif images converted automatically
-• Full-page capture with lazy-load scrolling
+A free website to Figma importer: HTML to Figma, URL to Figma, one page or a whole site,
+with no cap on how much you bring across.
 
-PERFECT FOR
-• Redesigning an existing website — import it and start editing
-• Building a moodboard or competitor analysis from live sites
-• Turning your production pages back into design files
-• Learning how a landing page is built, layer by layer
+WHAT COMES ACROSS
 
-BEHIND-LOGIN SITES
-Run the open-source renderer locally (one command) and a real browser window opens —
-sign in, navigate anywhere, then import the exact page you see. Great for web apps,
-paywalled pages and sites behind Cloudflare.
+• Auto Layout — flex containers arrive as real auto-layout frames with gap, padding and
+  alignment. Where the layout does not survive a check against the real coordinates, the
+  layer keeps its exact position rather than a plausible-looking wrong one.
+• A whole site, not one page — the plugin reads the sitemap, or follows internal links
+  when there is none, lists every page it found, and imports the ones you tick. Each page
+  lands in its own row of frames.
+• Several devices at once — 1440, 1280, 768, 390, or a width you type. Every variant
+  imports side by side.
+• Light and dark — prefers-color-scheme is emulated, so both themes can come in one run.
+• Color and text styles built from the site's own palette and typography.
+• A locked reference screenshot beside the import, for checking pixel by pixel.
+• webp and avif converted on the way in, SVG icons imported as vectors, lazy images
+  scrolled into view before capture.
+
+WHAT PEOPLE USE IT FOR
+
+Redesigning a site that already exists. Building a competitor board out of live pages
+instead of screenshots. Pulling production pages back into a design file. Taking a
+landing page apart to see how it was put together.
+
+SITES BEHIND A LOGIN
+
+Run the renderer on your own machine and a real Chrome window opens. Sign in, click
+through to the page you need, then import exactly what you are looking at — session,
+cookies and all. This is how you get web apps, paywalled articles and anything guarded
+by Cloudflare.
 
 HOW IT WORKS
-The plugin talks to a renderer service that opens the page in a real Chrome browser,
-reads the computed styles of every element and returns them as Figma layers.
-A shared instance is preconfigured — or self-host it with one command
-(open source, MIT): see the GitHub link below.
 
-No accounts. No import limits on your own server. Your pages never leave
-your machine when self-hosting.
+The plugin sends a URL to a renderer, which opens the page in real Chrome, reads the
+computed style of every element, and hands the result back as layers. A shared renderer
+is already running, so the plugin works the moment you install it — nothing to set up.
+You can also run your own in one command and import as much as you want; the source is
+on GitHub.
 
-SUPPORT THE PROJECT
-The plugin is completely free. If it saved you time, you can support development
-with a donation — USDT on the TON network only:
+Как перенести сайт в фигму: вставьте ссылку — плагин скопирует сайт в Figma
+редактируемыми слоями, с Auto Layout, тёмной темой и несколькими устройствами сразу.
+Импорт сайта в Figma бесплатно и без лимитов.
+
+FREE, AND STAYING FREE
+
+No account, no import quota, no trial that runs out. If it saved you an afternoon, you
+can send USDT on the TON network:
 UQBz8oG02Va5OnCUw5mZ7sIUhxcqqWrTwIDlMqqt8Ca0jWbL
-(Send only USDT and only on the TON network. TRC20, ERC20 or other
-networks/assets will be lost.)
-
-Keywords: website to figma, html to figma, url to figma, import website, web page
-import, site to design, convert html to design, figma website importer.
+USDT on TON only — TRC20, ERC20 or anything else sent to this address is lost.
 ```
 
-**Tags / категория**: Import, Website, HTML, Development / «Design tools».
-По тегам и тексту описания работает поиск Figma Community — фразы вроде
-«website to figma», «html to figma», «import website» уже вшиты в описание выше.
+### Category и теги
 
-**Ссылка на сайт плагина**: адрес вашего GitHub-репозитория.
+**Category:** Design tools → **Import & export**.
 
-### SEO для GitHub-репозитория (тоже находят через поиск)
+**Кураторские подкатегории:** отметить **HTML** и **Web**. Это не косметика — они
+ведут на страницы `/community/import-export/html` и `/web`, где плагины листают
+руками. **html.to.design не выбрал ни одной**, так что на этих страницах его просто
+нет.
 
-- **Description репозитория** (Settings → About):
-  `Free open-source Figma plugin: import any website into editable Figma layers with Auto Layout. Website to Figma / HTML to Figma importer.`
-- **Topics**: `figma-plugin`, `figma`, `website-to-figma`, `html-to-figma`,
-  `design-tools`, `playwright`, `web-scraping`, `url-to-design`, `import`
-- README уже содержит ключевые слова на русском и английском — GitHub и Google
-  индексируют его текст.
+**Пять своих тегов** — все фразой целиком, не одиночными словами:
+
+```
+#html to figma
+#website to figma
+#url to figma
+#import website
+#site to figma
+```
+
+**Ссылка на сайт плагина:** адрес репозитория на GitHub.
 
 ---
 
-## Что учесть после публикации
+## Почему тексты такие
 
-- **Нагрузка**: если плагином начнут пользоваться массово, облачный сервер станет
-  узким местом — поднимайте `MAX_CONCURRENT` и память, или добавьте вторую машину.
-- **Стоимость**: Railway Hobby ~$5/мес, Fly.io с автостопом — доллары в месяц.
-  Если станет дорого — в описании плагина уже написано, что можно самохоститься.
-- **Злоупотребления**: лимит 20 импортов/час на IP уже включён; при желании
-  добавьте API-ключи.
-- **Обновления плагина**: правите `plugin/*` → в Figma «Publish new release».
-  Обновления сервера пользователей не касаются — просто передеплойте.
+Разбор живой выдачи Figma Community, июль 2026. Что подтвердилось на замерах:
+
+**Совпадение по тексту сильнее популярности.** По запросу `url to figma` плагин
+Vellum с 23 пользователями стоит на пятом месте, а html.to.design с 2,53 млн — на
+пятнадцатом. Популярность работает как решающий голос внутри группы одинаково
+релевантных, а не как самостоятельный фактор.
+
+**Описание индексируется.** В справке Figma сказано про поиск по имени, тегам и
+хэндлу, но запрос `moodboard benchmark` находит html.to.design, у которого этих слов
+нет ни в имени, ни в теглайне, ни в тегах — только в глубине описания. Поэтому
+ключевые фразы вплетены в живые предложения, а не свалены списком в подвал.
+
+**Точная фраза в теге — самый дешёвый рычаг.** CodeTea с 18,6 тыс. пользователей
+держит первое место по `url to figma` благодаря тегу `#url to figma`. Теги
+многословные, и почти все листинги используют ровно пять, хотя в справке говорится
+про двенадцать.
+
+**У лидера дыра ровно там, где нам надо.** В имени html.to.design нет
+последовательности «html to figma», и по этому запросу его нет в первых 23
+результатах. Это самый частотный запрос в теме.
+
+**Русский внутри Community пуст.** `сайт в фигму` → 0 плагинов, `перенести сайт` → 1,
+и тот про мудборды. Русская фраза в описании стоит там намеренно и содержит
+формулировки, которые люди реально набирают: «перенести сайт в фигму», «импорт сайта
+в Figma». Рынок маленький, конкурентов нет вообще.
+
+**Чего в текстах намеренно нет:** имени html.to.design. Правила Figma его не
+запрещают, но чужие торговые марки разбираются по жалобе, и решение остаётся
+целиком на усмотрении Figma. Ставить чужой бренд в название ради трафика — рискнуть
+листингом.
+
+---
+
+## После публикации
+
+- **Нагрузка.** Облачный сервер станет узким местом первым: поднимайте
+  `MAX_CONCURRENT` и память или добавляйте вторую машину.
+- **Стоимость.** Oracle Always Free — $0, Railway Hobby ~$5/мес, Fly.io с автостопом —
+  доллары. Если станет дорого, в описании уже сказано, что сервер можно поднять свой.
+- **Злоупотребления.** Лимит 20 импортов в час с адреса включён; при желании
+  добавляются API-ключи.
+- **Обновления.** Правки в `plugin/*` → «Publish new release». Обновления сервера
+  пользователей не касаются, просто передеплойте.
+- **Продавать плагин не выйдет,** даже если захочется: Figma не пускает новых
+  продавцов в платные ресурсы Community. Донат остаётся единственным вариантом.

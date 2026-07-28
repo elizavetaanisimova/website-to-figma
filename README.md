@@ -1,149 +1,162 @@
-# Site to Figma — импорт любого сайта в Figma по ссылке
+# Website to Figma
 
-**Site to Figma** — бесплатный open-source плагин Figma, который переносит любой сайт
-по URL в редактируемые слои: фреймы, тексты, картинки, векторы, Auto Layout, стили.
-Работает как html.to.design, но бесплатно и на вашем собственном сервере.
+**Import any website into editable Figma layers.** Paste a URL and get frames, text,
+images, SVG vectors and Auto Layout — not a screenshot. A free website-to-Figma /
+HTML-to-Figma importer with a renderer you can run yourself.
 
-*Free open-source Figma plugin: import any website / URL / HTML page into editable
-Figma layers with Auto Layout — a free alternative to paid website-to-Figma importers.
-Website to Figma · HTML to Figma · URL to design · web page import.*
+[Что это, по-русски →](#по-русски)
 
-**Ключевые слова:** импорт сайта в фигму, сайт в Figma, html в фигму, website to figma,
-html to figma, url to figma, import website, скопировать сайт в фигму, верстка в фигму.
+![Website to Figma](assets/cover.png)
 
-> Хотите опубликовать плагин в Figma Community с облачным сервером —
-> пошаговая инструкция в [PUBLISH.md](PUBLISH.md) (деплой, иконка и обложка в `assets/`,
-> готовые тексты карточки). Сервер поддерживает облачный режим: `CLOUD=1 npm start`.
+---
 
-Бесплатный self-hosted аналог html.to.design **включая функции платного тарифа**:
-импорт любого сайта по ссылке в редактируемые слои Figma — с Auto Layout, несколькими
-устройствами за раз, тёмной темой, импортом из-под логина и скриншотом-эталоном.
+## What it does
 
-Состоит из двух частей:
+A page comes back as layers you can edit:
 
-- **`server/`** — локальный сервер рендеринга. Открывает страницу в настоящем Chrome
-  (через Playwright), снимает вычисленные стили, координаты, тексты, картинки
-  и отдаёт всё плагину. Он же ищет страницы сайта для пакетного импорта
-  (`discover.js`). Работает только на вашей машине, никуда ничего не отправляет.
-- **`plugin/`** — плагин Figma. Спрашивает ссылку, получает данные с сервера и строит слои.
+- **Auto Layout.** Flex containers arrive as real auto-layout frames with gap, padding
+  and alignment. Every layout is checked against the element's actual coordinates first —
+  where it does not hold up, the layer keeps its exact absolute position instead of a
+  plausible-looking wrong one.
+- **A whole site, not one page.** The plugin reads the sitemap, or crawls internal links
+  when there is none, and lists every page it found. Tick the ones you want; each lands
+  in its own row of frames.
+- **Several widths at once.** 1440, 1280, 768, 390, or a width you type. Variants import
+  side by side.
+- **Light and dark.** `prefers-color-scheme` is emulated, so both themes can come in one run.
+- **Styles.** Figma color and text styles built from the site's own palette and typography.
+- **A reference screenshot,** locked, beside the import, for checking pixel by pixel.
+- **Sites behind a login.** A real Chrome window opens — sign in, navigate, then import
+  the page you are looking at, session and all.
 
-## Требования
+Text keeps its font, size, weight, line height and alignment; a missing font falls back to
+the nearest match, then Inter. `webp` and `avif` are converted on the way in, SVG icons
+(including `<use>` sprites) come across as vectors, and lazy images are scrolled into view
+before capture.
 
-- Node.js 18+
-- Google Chrome — или один раз выполнить `npx playwright install chromium`
-- Figma **desktop-приложение** (локальные плагины импортируются только в нём)
+## Install
 
-## Установка
+**The plugin.** Figma **desktop** → **Plugins → Development → Import plugin from
+manifest…** → pick `plugin/manifest.json`. (Local plugins only import in the desktop app.)
 
-### 1. Сервер
+**The renderer.** Right now the plugin talks to a renderer on your own machine, so set
+one up first. Once the plugin lands in the Figma Community it will point at a shared
+renderer by default, and running your own becomes the option you pick for sites behind
+a login or for no rate limit at all.
 
-**Способ 1 (рекомендуемый, macOS): двойной клик по `mac/install.command`.**
-Сервер станет фоновым приложением — стартует сам при входе в систему и работает,
-пока компьютер включён. Терминал держать открытым не нужно.
-Подробности и удаление — в [mac/README.md](mac/README.md).
+macOS — double-click **`mac/install.command`**. It checks Node, installs what is missing,
+and registers the renderer as a background service that starts with your session. No
+terminal window to keep open. Details in [mac/README.md](mac/README.md).
 
-**Способ 2: запуск вручную.**
+Anywhere else:
 
 ```bash
 cd figma-site-importer/server
-npm install        # только первый раз
+npm install        # first run only
 npm start
 ```
 
-Оставьте окно Терминала открытым. Должно появиться:
-`Site → Figma: сервер рендеринга запущен (v2) — http://127.0.0.1:4511`
+Needs Node.js 18+ and Google Chrome — or run `npx playwright install chromium` once.
 
-### 2. Плагин
+Then point the plugin at it: **Advanced → Server address**.
 
-1. Откройте Figma (desktop).
-2. Меню → **Plugins → Development → Import plugin from manifest…**
-3. Выберите файл `figma-site-importer/plugin/manifest.json`.
+## Use
 
-## Использование
+Paste a link, pick widths and options, hit **Import**. Each variant (width × theme)
+becomes its own frame, laid out side by side.
 
-1. Запустите плагин: **Plugins → Development → Site → Figma (Local)**.
-2. Вставьте ссылку, выберите устройства и опции, нажмите **Импортировать**.
-3. Каждый вариант (устройство × тема) появится отдельным фреймом, рядом друг с другом.
+For several pages at once, press **Pages** next to the link field. The plugin finds the
+site's pages and lists them with titles — filter, tick, import. They go one after another,
+each in its own row. The estimate at the bottom of the list is worth a look before you
+tick two hundred pages: one page takes roughly 25 seconds.
 
-Чтобы забрать **несколько страниц сразу**, нажмите **Страницы** рядом с полем ссылки:
-плагин найдёт страницы сайта и покажет списком. Отметьте нужные (есть фильтр и
-«Все» / «Снять») и жмите **Импортировать** — страницы пойдут одна за другой,
-каждая своим рядом фреймов. Внизу списка показана оценка времени: одна страница —
-примерно 25 секунд, так что перед выбором пары сотен страниц лучше посмотреть на эту цифру.
+## What it will not do
 
-## Возможности
+- Auto Layout covers flex containers. Grid and ordinary block layouts stay on absolute
+  coordinates — accurate, just not auto-laid-out.
+- Animations, hover states and iframe contents do not come across.
+- Icon fonts (Font Awesome and friends) are skipped when the font is not installed.
+- Dark theme works on sites that respect `prefers-color-scheme`. When a site switches
+  theme with its own button, use the behind-a-login mode and flip it in the browser
+  that opens.
+- Complex CSS — `filter`, `blend-mode`, `clip-path`, `conic-gradient` — is simplified.
 
-### «Платные» функции html.to.design — здесь бесплатно
+## When something breaks
 
-| Функция | Как работает |
+| What you see | What to do |
 | --- | --- |
-| **Auto Layout** | Flex-контейнеры сайта становятся Figma auto layout: направление, gap, padding, выравнивание, space-between, wrap; absolute-элементы получают `Absolute position` внутри лейаута. Раскладка применяется только там, где реальные координаты её подтверждают — иначе остаются точные абсолютные позиции |
-| **Весь сайт целиком** | Кнопка «Страницы» рядом со ссылкой находит все страницы сайта (карта сайта, а если её нет — обход внутренних ссылок), показывает списком с названиями. Отмечаете нужные — импортируются пакетом, каждая своим рядом фреймов |
-| **Несколько устройств за раз** | Выберите чипами 1440 / 1280 / 768 / 390 / свою ширину — все варианты импортируются рядом |
-| **Тёмная и светлая тема** | Эмуляция `prefers-color-scheme`; режим «Обе» импортирует два варианта |
-| **Сайты за логином и капчей** | Опция «Сайт за логином» открывает настоящее окно браузера: войдите, откройте нужную страницу и нажмите «Импортировать открытую страницу» — импорт пойдёт со всеми вашими куками |
-| **Скриншот-эталон** | Рядом с импортом кладётся заблокированный фрейм с реальным скриншотом страницы для пиксельной сверки |
-| **Стили цветов и текста** | Автоматически создаёт Figma paint/text styles из палитры и типографики сайта |
-| **История и настройки** | Последние импорты и все настройки сохраняются между сессиями |
-| **Безлимит** | Ограничений на количество импортов нет — сервер ваш |
+| Red dot, "server offline" | Double-click `mac/install.command`, or `npm start` in `server/` |
+| Port 4511 is taken | `PORT=4512 npm start`, then change the address in Advanced |
+| "Could not launch a browser" | `npx playwright install chromium` in `server/` |
+| Page cut off at the bottom | Raise **Max height** in Advanced |
+| Cloudflare or a captcha blocks it | Turn on **Site behind a login**, pass the check in the window that opens |
+| Layers shifted after Auto Layout | Turn Auto Layout off — the import goes pixel by pixel instead |
+| **Pages** found too few | The site has no sitemap and the crawl only goes two levels deep. Paste the page you need and import it on its own |
+| **Pages** found too much | The list shows everything in the sitemap. Filter by address, then hit **All** — it selects only what the filter left |
 
-### База (как и в бесплатном html.to.design)
+## How it works
 
-- Полная высота страницы, прокрутка с подгрузкой lazy-load картинок
-- Тексты со шрифтом, размером, насыщенностью, межстрочным интервалом, выравниванием
-  (нет шрифта — подбирается ближайший, затем Inter)
-- Картинки `<img>` и background-image; webp/avif/svg конвертируются автоматически
-- SVG-иконки как векторы (включая спрайты `<use>`), градиенты, тени, рамки, скругления
-- Поля ввода с плейсхолдерами, постеры видео, содержимое canvas, отмена импорта
+```
+Figma plugin (ui.html) ──HTTP──▶ renderer (Node + Playwright + Chrome)
+        ▲                              │ opens the page, headless or in a window,
+        │  JSON: layer tree,           │ scrolls it, reads getComputedStyle,
+        │  flex layouts, text,         │ works out flex layouts,
+        │  styles, images, screenshot  │ downloads images, crops the screenshot
+        └── code.js builds frames, applies Auto Layout, creates styles
+```
 
-## Ограничения (честно)
+`server/` opens the page and reads it. `plugin/` asks for a URL and builds the layers.
+Nothing leaves your machine when you run the renderer yourself.
 
-- Auto Layout строится для flex-контейнеров; grid и обычные блоки остаются
-  на абсолютных координатах (зато позиции точные)
-- Анимации, hover-состояния и содержимое iframe не переносятся
-- Иконки из иконочных шрифтов (Font Awesome и т.п.) пропускаются, если шрифт не установлен
-- Тёмная тема работает для сайтов, уважающих `prefers-color-scheme`; если сайт
-  переключает тему собственной кнопкой — используйте режим «Сайт за логином»
-  и переключите тему прямо в открывшемся браузере
-- Сложные CSS-эффекты (filter, blend-mode, clip-path, conic-gradient) упрощаются
+## Support the project
 
-## Решение проблем
+Free, no accounts, no import quota. If it saved you an afternoon:
 
-| Проблема | Решение |
-| --- | --- |
-| Красная точка «сервер недоступен» | Двойной клик по `mac/install.command` — или `npm start` в папке `server` (не закрывайте Терминал) |
-| Порт 4511 занят | `PORT=4512 npm start`, в плагине измените адрес в «Дополнительно» |
-| «Не удалось запустить браузер» | `npx playwright install chromium` в папке `server` |
-| Страница обрезана снизу | Увеличьте «Макс. высота» в «Дополнительно» |
-| Cloudflare / капча не пускает | Включите «Сайт за логином», пройдите проверку в открывшемся окне |
-| Слои «поехали» после Auto Layout | Выключите тумблер Auto Layout — импорт будет попиксельным |
-| «Страницы» нашли слишком мало | У сайта нет карты сайта, и обход берёт ссылки только на два уровня вглубь. Нужную страницу можно вставить в поле ссылки и импортировать отдельно |
-| «Страницы» нашли лишнее | Список отдаёт всё, что есть в карте сайта. Отфильтруйте по адресу и жмите «Все» — выделятся только отфильтрованные |
-
-## Поддержать проект ❤️
-
-Плагин полностью бесплатный и без ограничений. Если он сэкономил вам время —
-можно поддержать разработку донатом:
-
-**Только USDT в сети TON:**
+**USDT on the TON network only**
 
 ```
 UQBz8oG02Va5OnCUw5mZ7sIUhxcqqWrTwIDlMqqt8Ca0jWbL
 ```
 
-> ⚠️ Отправляйте на этот адрес **только USDT** и **только в сети TON**.
-> USDT TRC20 (Tron), ERC20 и другие сети/монеты сюда отправлять нельзя —
-> средства будут потеряны.
+> ⚠️ **USDT on TON only.** USDT TRC20 (Tron), ERC20 or any other network or coin sent
+> to this address is lost.
 
-Кнопка «Поддержать» с этим адресом есть и внизу окна плагина.
+The same address is behind the **Support** button at the bottom of the plugin.
 
-## Как это работает
+## License
 
-```
-Figma-плагин (ui.html) ──HTTP──▶ локальный сервер (Node + Playwright + Chrome)
-        ▲                              │ открывает страницу (headless или с окном),
-        │  JSON: дерево слоёв,         │ скроллит, читает getComputedStyle,
-        │  flex-раскладки, тексты,     │ анализирует flex-раскладки,
-        │  стили, картинки, скриншот   │ качает картинки, режет скриншот
-        └── code.js строит фреймы, применяет Auto Layout, создаёт стили
-```
+Source available, not open source. Read it, run it, modify it for yourself, host it for
+your own team — but do not republish it to the Figma Community or any other marketplace.
+Full terms in [LICENSE](LICENSE).
+
+---
+
+## По-русски
+
+**Website to Figma** переносит любой сайт по ссылке в редактируемые слои Figma:
+фреймы, тексты, картинки, векторы, Auto Layout и стили. Как перенести сайт в фигму —
+вставить ссылку и нажать «Импортировать».
+
+Бесплатно и без ограничений на количество импортов. Умеет то, за что аналоги берут
+деньги: Auto Layout, импорт всех страниц сайта пакетом, несколько устройств за раз,
+тёмную тему, вход на сайты за логином и скриншот-эталон для сверки.
+
+Состоит из двух частей:
+
+- **`server/`** — сервер рендеринга. Открывает страницу в настоящем Chrome через
+  Playwright, снимает вычисленные стили, координаты, тексты и картинки. Он же ищет
+  страницы сайта для пакетного импорта. На вашей машине не отправляет никуда ничего.
+- **`plugin/`** — плагин Figma. Спрашивает ссылку, получает данные и строит слои.
+
+**Установка сервера на macOS:** двойной клик по `mac/install.command` — дальше он
+работает в фоне сам, терминал держать открытым не нужно.
+Подробности в [mac/README.md](mac/README.md).
+
+**Установка плагина:** Figma desktop → **Plugins → Development → Import plugin from
+manifest…** → выбрать `plugin/manifest.json`.
+
+Ограничения, разбор проблем и устройство — в английской части выше, разделы
+[What it will not do](#what-it-will-not-do) и [When something breaks](#when-something-breaks).
+
+Хотите опубликовать свою сборку в Community — нельзя, лицензия это запрещает.
+Всё остальное можно.

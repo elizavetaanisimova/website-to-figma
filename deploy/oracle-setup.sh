@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Настройка сервера Site to Figma на свежей Ubuntu-виртуалке (Oracle Cloud Always Free).
 # Запуск на виртуалке:
-#   curl -fsSL https://raw.githubusercontent.com/miro-creator-site/site-to-figma/main/deploy/oracle-setup.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/elizavetaanisimova/website-to-figma/main/deploy/oracle-setup.sh | bash
 set -euo pipefail
 
 echo "== Site to Figma: установка сервера =="
@@ -22,12 +22,12 @@ fi
 
 # 3. Код
 cd "$HOME"
-if [ ! -d site-to-figma ]; then
+if [ ! -d website-to-figma ]; then
   echo "-- Клонирую репозиторий…"
   sudo apt-get install -y git >/dev/null 2>&1 || true
-  git clone https://github.com/miro-creator-site/site-to-figma.git
+  git clone https://github.com/elizavetaanisimova/website-to-figma.git
 fi
-cd site-to-figma/deploy
+cd website-to-figma/deploy
 
 # 4. Домен
 if [ ! -f .env ]; then
@@ -44,4 +44,4 @@ echo ""
 echo "== Готово =="
 echo "Проверка:  https://${DOMAIN}/health"
 echo "Логи:      sudo docker compose logs -f app"
-echo "Обновить:  cd ~/site-to-figma && git pull && cd deploy && sudo docker compose up -d --build"
+echo "Обновить:  cd ~/website-to-figma && git pull && cd deploy && sudo docker compose up -d --build"

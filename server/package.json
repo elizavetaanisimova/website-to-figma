@@ -2,7 +2,7 @@
   "name": "site-to-figma-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Локальный сервер рендеринга для плагина Site → Figma",
+  "description": "Renderer service for the Website to Figma plugin — opens a page in real Chrome and returns it as Figma layers",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
